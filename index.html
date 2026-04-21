@@ -577,6 +577,66 @@ input,textarea{cursor:text;}
   font-size:10px;color:var(--g1);line-height:1.8;
 }
 .gate-footer a{color:var(--gold);text-decoration:none;}
+
+@media print {
+  #stepper,#gate,#s-select,#s-studio,#s-pipeline { display:none!important; }
+  #app { top:0!important; position:relative!important; }
+  #s-report { display:block!important; overflow:visible!important; position:relative!important; }
+  .report-wrap { padding:0!important; max-width:100%!important; }
+  body { background:#fff!important; color:#111!important; }
+  :root {
+    --ink:#fff; --n1:#f5f5f5; --n2:#efefef; --n3:#e8e8e8; --n4:#e0e0e0;
+    --w:#111; --g1:#555; --g2:#666; --g3:#444;
+    --gold:#8A6020; --gl:#8A6020; --b:rgba(0,0,0,0.15);
+  }
+  .report-section { break-inside:avoid; page-break-inside:avoid; }
+  .report-cover { flex-direction:column!important; }
+  #report-3d-mini { display:none!important; }
+  .kpi { break-inside:avoid; }
+  .report-actions { display:none!important; }
+  a { color:inherit!important; }
+  .rbadge { border:1px solid #ccc!important; }
+  canvas { display:none!important; }
+}
+
+/* ─── RESPONSIVE / MOBILE ─── */
+@media (max-width: 900px) {
+  /* Studio: stack panels vertically */
+  #s-studio { flex-direction: column; }
+  #st-left { width: 100%; height: 200px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--b); overflow: hidden; }
+  .st-left-head { flex-shrink: 0; width: 180px; border-right: 1px solid var(--b); border-bottom: none; }
+  #eq-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 2px; align-content: flex-start; padding: 4px; overflow-y: auto; }
+  .eq-item { width: calc(50% - 3px); }
+  #placed-list-wrap { display: none; }
+  .eq-divider { display: none; }
+  #eq-cats { flex-wrap: nowrap; overflow-x: auto; }
+  #st-canvas { flex: 1; min-height: 300px; }
+  #canvas-wrap { min-height: 280px; }
+  #st-right { width: 100%; height: 220px; border-left: none; border-top: 1px solid var(--b); }
+  #model-switcher-strip { display: none; }
+  /* Pipeline: full width */
+  .pipe-cfg-grid { grid-template-columns: 1fr; }
+  /* Report: single column */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .floor-grid { grid-template-columns: 1fr; }
+  .report-cover { flex-direction: column; }
+  #report-3d-mini { width: 100% !important; }
+  /* Select: 2-col grid */
+  .model-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Stepper: hide labels */
+  .step-label { display: none; }
+  .step-arrow { display: none; }
+  #api-key-input { width: 120px; }
+  #nav-username { display: none; }
+}
+@media (max-width: 560px) {
+  .model-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  #st-left { height: 160px; flex-direction: column; }
+  .st-left-head { width: 100%; border-right: none; border-bottom: 1px solid var(--b); }
+  .step-num { width: 18px; height: 18px; font-size: 8px; }
+  .step-logo-text { font-size: 13px; }
+}
 </style>
 </head>
 <body>
@@ -689,6 +749,22 @@ input,textarea{cursor:text;}
       <div class="sel-hero-sub">Choose a hull family to begin your design session. All models share FRP composite construction and the same hull tooling.</div>
     </div>
     <div class="model-grid" id="model-grid"></div>
+    <div style="text-align:center;margin-bottom:12px">
+      <button onclick="toggleCompare()" id="compare-btn" style="padding:6px 16px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--g2);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--bb)';this.style.color='var(--w)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'">Compare All Models ↕</button>
+    </div>
+    <div id="compare-table" style="display:none;margin-bottom:20px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="border-bottom:1px solid var(--b)">
+          <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;color:var(--g1);text-transform:uppercase">Specification</th>
+          <th style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);text-align:center">AQS-25</th>
+          <th style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);text-align:center">AQS-35</th>
+          <th style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);text-align:center">AQS-40</th>
+          <th style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);text-align:center">AQS-45</th>
+          <th style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);text-align:center">AQS-50</th>
+        </tr></thead>
+        <tbody id="compare-tbody"></tbody>
+      </table>
+    </div>
     <div id="sel-cfg">
       <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Project Setup</div>
       <div class="cfg-grid">
@@ -760,10 +836,20 @@ input,textarea{cursor:text;}
       <div class="tb-sep"></div>
       <div class="tb-meta">
         <div class="tb-stat">Model <span id="tb-model">—</span></div>
+        <div class="tb-stat">Config <span id="tb-config">—</span></div>
         <div class="tb-stat">LOA <span id="tb-loa">—</span></div>
         <div class="tb-stat">GMt <span id="tb-gmt">—</span></div>
         <div class="tb-stat">Disp <span id="tb-disp">—</span></div>
+        <div class="tb-stat">Items <span id="tb-items">0</span></div>
       </div>
+    </div>
+    <!-- Model quick-switcher strip -->
+    <div id="model-switcher-strip" style="display:flex;align-items:center;gap:6px;padding:5px 14px;border-bottom:1px solid var(--b);background:rgba(5,9,15,0.7);flex-shrink:0;overflow-x:auto">
+      <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0">Switch:</span>
+      <div id="model-switch-btns" style="display:flex;gap:4px"></div>
+      <div style="width:1px;height:16px;background:var(--b);flex-shrink:0;margin:0 4px"></div>
+      <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);letter-spacing:0.1em;flex-shrink:0">Config:</span>
+      <div id="config-switch-btns" style="display:flex;gap:4px"></div>
     </div>
     <div id="canvas-wrap">
       <!-- 2D SVG floor plan -->
@@ -814,6 +900,7 @@ input,textarea{cursor:text;}
     <div id="st-aibar">
       <input id="st-ai-inp" placeholder="Ask the Design AI — e.g. 'Optimise Zone D for FOH' · 'Weight impact of LED walls' · 'Best layout for AQS-35 resort'"/>
       <button class="ai-send" id="st-ai-go" onclick="studioAskAI()">Ask AI ▶</button>
+      <button class="btn-sec" onclick="saveDesignToURL()" style="flex-shrink:0" title="Copy shareable link to this design">Share ↗</button>
       <button class="btn-sec" onclick="goToPipeline()" style="flex-shrink:0">Run Engineering →</button>
     </div>
   </div>
@@ -863,6 +950,15 @@ input,textarea{cursor:text;}
       <div class="pipe-eyebrow">Engineering Analysis</div>
       <div class="pipe-title" id="pipe-title">7-Stage Engineering Pipeline</div>
       <div class="pipe-sub">Claude AI runs each stage sequentially — Config → Hull → Hydrostatics → Weight → Layout → 3D → Summary</div>
+      <div style="margin-top:14px;display:none" id="pipe-overall-wrap">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);letter-spacing:0.1em">OVERALL PROGRESS</span>
+          <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gl)" id="pipe-pct">0%</span>
+        </div>
+        <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+          <div id="pipe-overall-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:2px;transition:width 0.4s ease"></div>
+        </div>
+      </div>
     </div>
     <div class="pipe-cfg" id="pipe-cfg">
       <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Project Details</div>
@@ -973,6 +1069,11 @@ function setApiKeyPrompt() {
 // ═══════════════════════════════════════════════════════════════
 // ACCESS GATE — partner access codes
 // ═══════════════════════════════════════════════════════════════
+/* 
+  NOTE: Access codes are stored client-side and visible in View Source.
+  This is intentional for a partner preview tool — no sensitive data is protected.
+  For production, move auth to a backend. To add/remove codes: edit this object.
+*/
 const ACCESS_CODES = {
   'AQUA2026':   { role: 'Partner',     label: 'AquaStra Partner Access' },
   'PARTNER1':   { role: 'Partner',     label: 'Partner Preview 1' },
@@ -1074,6 +1175,7 @@ const PX = 16;
 const PAD = 40;
 // 3D engine top-level vars
 let renderer3, scene3, camera3, animId3;
+let miniRenderer = null;
 let orb3State = { rotating:false, panning:false, lastX:0, lastY:0, theta:-0.6, phi:1.0, radius:60, target:{x:12,y:0,z:2} };
 
 // ══ DATA ════════════════════════════════════════════════════════
@@ -1388,8 +1490,8 @@ ${zones.slice(0,6).map(z => `  ${z.id}: ${z.name} — ${Math.abs((z.x1-z.x0)*(z.
 
 ${session ? `No pipeline session` : 'No pipeline session for this model.'}
 
-3D EQUIPMENT (${S3.placedItems.length} items, ${S3.placedItems.reduce((s,pi)=>{const e=EQUIPMENT.find(e=>e.id===pi.equipId);return s+(e?.wt||0);},0).toFixed(2)}t added):
-${S3.placedItems.length===0?'None.'  :S3.placedItems.slice(0,8).map(pi=>{const e=EQUIPMENT.find(e=>e.id===pi.equipId);return '  '+(e?.name||pi.equipId)+' ('+((e?.wt)||0)+'t) zone '+pi.zoneId;}).join('\n')}`;
+3D EQUIPMENT (${S3.placedItems.length} items, ${S3.placedItems.reduce((s,pi)=>{const e=EQUIPMENT.find(e=>e.id===(pi.eqId||pi.equipId));return s+(e?.wt||0);},0).toFixed(2)}t added):
+${S3.placedItems.length===0?'None.'  :S3.placedItems.slice(0,8).map(pi=>{const e=EQUIPMENT.find(e=>e.id===(pi.eqId||pi.equipId));return '  '+(e?.name||pi.eqId||pi.equipId)+' ('+((e?.wt)||0)+'t) zone '+pi.zoneId;}).join('\n')}`;
 }
 
 
@@ -1640,7 +1742,7 @@ function build3DStructure(M) {
 function build3DEquipment() {
   clearGrp('equipment');
   APP.placedItems.forEach(pi => {
-    const eq = EQUIPMENT.find(e => e.id === pi.equipId);
+    const eq = EQUIPMENT.find(e => e.id === (pi.eqId||pi.equipId));
     if (!eq) return;
     const [w, h, d] = eq.dim;
     const geo = new THREE.BoxGeometry(w, h, d);
@@ -1651,7 +1753,7 @@ function build3DEquipment() {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(pi.position.x, pi.position.y, pi.position.z + d/2);
     mesh.castShadow = true;
-    mesh.userData = {layer:'equipment', placedId:pi.id, equipId:pi.equipId, zoneName:pi.zoneId};
+    mesh.userData = {layer:'equipment', placedId:pi.id, eqId:pi.eqId||pi.equipId, zoneName:pi.zoneId};
     mesh.add(new THREE.LineSegments(
       new THREE.EdgesGeometry(geo),
       new THREE.LineBasicMaterial({color:0xC9A84C, transparent:true, opacity:0.4})
@@ -1753,7 +1855,7 @@ function e3click(e) {
       const zoneId = findZone3AtPoint(pt);
       const eq = EQUIPMENT.find(eq=>eq.id===S3.selectedEquip);
       const pi = {
-        id: 'pi-'+Date.now(), equipId:S3.selectedEquip,
+        id: 'pi-'+Date.now(), eqId:S3.selectedEquip,
         position:{x:pt.x, y:pt.y, z:pt.z},
         zoneId: zoneId||'unzoned', meshUuid:null,
       };
@@ -1881,7 +1983,7 @@ function update3DHUD(M) {
 }
 function update3DWeightBar() {
   const total = APP.placedItems.reduce((s,pi) => {
-    const eq = EQUIPMENT.find(e=>e.id===pi.equipId); return s+(eq?.wt||0);
+    const eq = EQUIPMENT.find(e=>e.id===(pi.eqId||pi.equipId)); return s+(eq?.wt||0);
   }, 0);
   const M = MODEL_DB[APP.model];
   const pct = M ? Math.min(100, (total/M.payload)*100) : 0;
@@ -2052,20 +2154,24 @@ function renderFloorPlan() {
         fill="${ledFill}" stroke="${stroke}" stroke-width="${strokeW}"
         onclick="selectZoneFromSVG('${z.id}')"${extraFilter}${ledGlow}/>`;
 
-      // Zone label (only if wide enough)
-      if (zw > 28 && zh > 14) {
-        const labelLines = z.name.replace('Zone ','').replace(' — ',' — ').split('—');
+      // Zone labels — ID always, name when space allows
+      { 
         const lx = zx + zw/2, ly = zy + zh/2;
-        if (labelLines.length > 1) {
-          html += `<text x="${lx}" y="${ly-4}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(8, zw/8)}" fill="${isActive?'#E2C47A':'rgba(255,255,255,0.45)'}" pointer-events="none">${labelLines[0].trim()}</text>`;
-          html += `<text x="${lx}" y="${ly+6}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(7, zw/9)}" fill="${isActive?'rgba(226,196,122,0.7)':'rgba(255,255,255,0.28)'}" pointer-events="none">${labelLines[1].trim()}</text>`;
-        } else {
-          html += `<text x="${lx}" y="${ly+3}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(8, zw/8)}" fill="${isActive?'#E2C47A':'rgba(255,255,255,0.4)'}" pointer-events="none">${z.name.replace('Zone ','')}</text>`;
+        const idCol = isActive ? '#E2C47A' : 'rgba(201,168,76,0.8)';
+        const nameCol = isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)';
+        const area = Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(0);
+        // Always show zone ID
+        if (zw > 16 && zh > 10) {
+          html += `<text x="${lx}" y="${zh > 24 ? ly-6 : ly+3}" text-anchor="middle" dominant-baseline="middle" font-family="DM Mono" font-size="8" font-weight="bold" fill="${idCol}" pointer-events="none">${z.id}</text>`;
         }
-        // Area label
-        const area = Math.abs((z.x1-z.x0) * (z.y1-z.y0));
-        if (zh > 22 && zw > 30) {
-          html += `<text x="${lx}" y="${zy+zh-5}" text-anchor="middle" font-family="DM Mono" font-size="7" fill="rgba(255,255,255,0.2)" pointer-events="none">${area.toFixed(0)}m²</text>`;
+        // Show name when tall enough
+        if (zw > 36 && zh > 28) {
+          const shortName = z.name.length > 14 ? z.name.slice(0,13)+'…' : z.name;
+          html += `<text x="${lx}" y="${ly+5}" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans" font-size="7" fill="${nameCol}" pointer-events="none">${shortName}</text>`;
+        }
+        // Show area when tall enough
+        if (zw > 36 && zh > 42) {
+          html += `<text x="${lx}" y="${ly+16}" text-anchor="middle" dominant-baseline="middle" font-family="DM Mono" font-size="6" fill="rgba(255,255,255,0.25)" pointer-events="none">${area}m²</text>`;
         }
       }
     });
@@ -2304,6 +2410,14 @@ function setTier(t, btn) {
   document.querySelectorAll('[onclick^="setTier"]').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   updateSelSummary();
+  // Update price on selected card
+  if (APP.model) {
+    const priceEl = document.querySelector('#mc-'+APP.model+' .mcard-price');
+    if (priceEl) {
+      const M = MODEL_DB[APP.model];
+      priceEl.textContent = M.price[t] + ' ('+t+')';
+    }
+  }
 }
 
 function updateSelSummary() {
@@ -2334,6 +2448,7 @@ function startDesign() {
 function onEnterStudio() {
   const M = MODEL_DB[APP.model];
   document.getElementById('tb-model').textContent = APP.model;
+  document.getElementById('tb-config').textContent = APP.config;
   document.getElementById('tb-loa').textContent = M.loa+'m';
   document.getElementById('tb-gmt').textContent = M.gmt+'m';
   document.getElementById('tb-disp').textContent = M.displacement+'t';
@@ -2347,6 +2462,50 @@ function onEnterStudio() {
   requestAnimationFrame(() => {
     renderFloorPlan();
   });
+  buildStudioSwitchers();
+}
+
+function buildStudioSwitchers() {
+  // Model buttons
+  const mbEl = document.getElementById('model-switch-btns');
+  if (mbEl) {
+    mbEl.innerHTML = Object.keys(MODEL_DB).map(key =>
+      `<button onclick="switchStudioModel('${key}')" style="padding:3px 8px;border:1px solid ${APP.model===key?'var(--gold)':'var(--b)'};border-radius:2px;background:${APP.model===key?'rgba(201,168,76,0.1)':'transparent'};color:${APP.model===key?'var(--gold)':'var(--g2)'};font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;white-space:nowrap;transition:all .15s">${key}</button>`
+    ).join('');
+  }
+  // Config buttons
+  const cbEl = document.getElementById('config-switch-btns');
+  if (cbEl) {
+    const M = MODEL_DB[APP.model];
+    cbEl.innerHTML = (M.configs||['Hospitality']).map(cfg =>
+      `<button onclick="switchStudioConfig('${cfg}')" style="padding:3px 8px;border:1px solid ${APP.config===cfg?'var(--teal)':'var(--b)'};border-radius:2px;background:${APP.config===cfg?'rgba(26,123,140,0.1)':'transparent'};color:${APP.config===cfg?'var(--tl)':'var(--g2)'};font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;white-space:nowrap;transition:all .15s">${cfg}</button>`
+    ).join('');
+  }
+}
+
+function switchStudioModel(key) {
+  if (key === APP.model) return;
+  const hadItems = APP.placedItems.length > 0;
+  APP.model = key;
+  APP.config = MODEL_DB[key].configs[0];
+  APP.selectedZone = null;
+  if (hadItems) {
+    APP.placedItems = [];
+    UNDO_STACK.length = 0;
+    toast('Model switched to '+key+' — placed items cleared');
+  }
+  onEnterStudio();
+  if (APP.deck==='3d') { build3DScene(); set3DView('p'); }
+}
+
+function switchStudioConfig(cfg) {
+  APP.config = cfg;
+  APP.selectedZone = null;
+  document.getElementById('tb-config').textContent = cfg;
+  buildStudioSwitchers();
+  requestAnimationFrame(renderFloorPlan);
+  if (APP.deck==='3d') build3DScene();
+  toast('Config: '+cfg);
 }
 
 // ─── Deck tabs ───────────────────────────────────────────────
@@ -2423,10 +2582,30 @@ document.getElementById('three-wrap').addEventListener('drop', e=>{
 });
 
 // ─── Placed items ─────────────────────────────────────────────
+// Undo stack for placed items
+const UNDO_STACK = [];
+function undoPlace() {
+  if (UNDO_STACK.length === 0) { toast('Nothing to undo'); return; }
+  const last = UNDO_STACK.pop();
+  APP.placedItems = APP.placedItems.filter(p => p.id !== last.id);
+  // Remove from 3D
+  const m3 = mGroups.equipment.find(m => m.userData.placedId === last.id);
+  if (m3) { scene3?.remove(m3); mGroups.equipment.splice(mGroups.equipment.indexOf(m3),1); }
+  renderPlacedList();
+  if (APP.deck==='3d') build3DEquipment();
+  toast('Undone: '+last.name);
+}
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='z' && APP.screen===2) { e.preventDefault(); undoPlace(); }
+});
+
 function renderPlacedList() {
   const total = APP.placedItems.reduce((s,p)=>{const eq=EQUIPMENT.find(e=>e.id===p.eqId);return s+(eq?.wt||0);},0);
   document.getElementById('placed-count').textContent = APP.placedItems.length;
   document.getElementById('placed-wt').textContent = total.toFixed(2);
+  const tbI = document.getElementById('tb-items');
+  if (tbI) tbI.textContent = APP.placedItems.length;
   const cs = c=>'#'+c.toString(16).padStart(6,'0');
   document.getElementById('placed-list-wrap').innerHTML = APP.placedItems.length===0
     ? '<div style="color:var(--g1);font-size:10px;padding:6px 8px">Double-click or drag equipment to place</div>'
@@ -2627,7 +2806,13 @@ function onEnterPipeline() {
           <div class="stage-label">${s.label}</div>
           <div class="stage-desc">${s.desc}</div>
         </div>
-        <div class="stage-status" id="sstat-${s.id}">Pending</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="stage-status" id="sstat-${s.id}">Pending</div>
+          <button id="srerun-${s.id}" onclick="event.stopPropagation();rerunStage('${s.id}')"
+            style="display:none;padding:3px 8px;background:transparent;border:1px solid var(--b);border-radius:2px;font-family:'DM Mono',monospace;font-size:7px;color:var(--g2);cursor:pointer;transition:all .15s"
+            onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+            onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'">↻ Re-run</button>
+        </div>
       </div>
       <div class="stage-body" id="sbody-${s.id}"></div>
     </div>
@@ -2655,11 +2840,20 @@ async function runPipeline() {
   const addedWt = placed.reduce((s,p)=>s+p.wt,0);
 
   // Run stages sequentially
+  // Show progress bar
+  const overallWrap = document.getElementById('pipe-overall-wrap');
+  const overallBar = document.getElementById('pipe-overall-bar');
+  const pctEl = document.getElementById('pipe-pct');
+  if (overallWrap) overallWrap.style.display='block';
+
   for (let i=0; i<STAGE_DEFS.length; i++) {
     const s = STAGE_DEFS[i];
     setStageStatus(s.id,'running','Running…');
     document.getElementById('sbody-'+s.id).classList.add('show');
     document.getElementById('pipe-status-text').textContent = `Running ${s.label}…`;
+    const pct = Math.round((i/STAGE_DEFS.length)*100);
+    if (overallBar) overallBar.style.width = pct+'%';
+    if (pctEl) pctEl.textContent = pct+'%';
 
     try {
       const result = await runStage(s, i, M, placed, addedWt);
@@ -2689,6 +2883,8 @@ async function runPipeline() {
   btn.disabled = false; btn.textContent = 'Re-run Pipeline';
   const hadErrors = !APP.apiKey || (APP.pipelineResult && Object.values(APP.pipelineResult).some(r=>!r));
 document.getElementById('pipe-status-text').textContent = '✓ Analysis complete' + (!APP.apiKey ? ' (computed values — add API key for AI analysis)' : '');
+  if (overallBar) overallBar.style.width = '100%';
+  if (pctEl) pctEl.textContent = '100%';
   document.getElementById('pipe-goto-report').style.display='block';
   APP.unlocked.add(4);
   toast('Engineering pipeline complete — view your Design Report');
@@ -2698,8 +2894,33 @@ function setStageStatus(id, cls, text) {
   const card = document.getElementById('sc-'+id);
   card.className = 'stage-card '+cls;
   document.getElementById('sstat-'+id).textContent = text;
-  if (cls==='done') document.getElementById('snum-'+id).innerHTML='<span style="color:var(--green)">✓</span>';
+  if (cls==='done') {
+    document.getElementById('snum-'+id).innerHTML='<span style="color:var(--green)">✓</span>';
+    const rerunBtn = document.getElementById('srerun-'+id);
+    if (rerunBtn) rerunBtn.style.display='block';
+  }
   if (cls==='running') document.getElementById('snum-'+id).innerHTML='<span style="color:var(--tl);animation:stagePulse 1s infinite alternate">●</span>';
+}
+
+async function rerunStage(stageId) {
+  if (APP.pipelineRunning) { toast('Pipeline is running — wait for completion'); return; }
+  const M = MODEL_DB[APP.model];
+  const placed = APP.placedItems.map(p=>({name:EQUIPMENT.find(e=>e.id===(p.eqId||p.equipId))?.name||p.eqId,zone:p.zoneId,wt:p.wt||0,cat:EQUIPMENT.find(e=>e.id===(p.eqId||p.equipId))?.cat||''}));
+  const addedWt = APP.placedItems.reduce((s,p)=>s+(p.wt||0),0);
+  const stageDef = STAGE_DEFS.find(s=>s.id===stageId);
+  if (!stageDef) return;
+  setStageStatus(stageId,'running','Re-running…');
+  document.getElementById('sbody-'+stageId).classList.add('show');
+  try {
+    const result = await runStage(stageDef, STAGE_DEFS.indexOf(stageDef), M, placed, addedWt);
+    setStageStatus(stageId,'done','✓ Complete');
+    renderStageResult(stageId, result);
+    if (!APP.pipelineResult) APP.pipelineResult = {};
+    APP.pipelineResult[stageId] = result;
+    toast(stageId+' re-run complete');
+  } catch(e) {
+    setStageStatus(stageId,'fail','✗ '+e.message.slice(0,40));
+  }
 }
 
 
@@ -2718,7 +2939,7 @@ function computeFallback(stageId, M, placed, addedWt) {
   const lcg         = +(M.loa * 0.47).toFixed(2);
   const vcg         = +(M.depth * 0.38).toFixed(2);
   const eff_power   = +(M.resistance * 3.5).toFixed(1);
-  const zones       = getZones(M.id || APP.model, APP.config);
+  const zones       = getZones(APP.model, APP.config);
   const mainZones   = zones.filter(z=>z.deck==='main');
   const upperZones  = zones.filter(z=>z.deck==='upper');
   const lowerZones  = zones.filter(z=>z.deck==='lower');
@@ -2860,36 +3081,64 @@ async function runStage(stageDef, idx, M, placed, addedWt) {
 
 function renderStageResult(stageId, result) {
   const body = document.getElementById('sbody-'+stageId);
-  // Build a nice table from the result
-  const rows = Object.entries(result).filter(([k,v])=>!Array.isArray(v)&&typeof v!=='object');
-  const arrRows = Object.entries(result).filter(([k,v])=>Array.isArray(v));
-
-  let html = '';
-  if (rows.length > 0) {
-    html += `<table class="stage-table"><tbody>`;
-    rows.forEach(([k,v])=>{
-      const isCheck = String(v)==='pass'||String(v)==='warn'||String(v)==='fail';
-      html += `<tr${isCheck&&v==='warn'?' class="warn"':''}><td>${k.replace(/_/g,' ')}</td><td>${v}</td></tr>`;
-    });
-    html += `</tbody></table>`;
-  }
-  // Render arrays (checks, warnings, recommendations)
-  arrRows.forEach(([k,v])=>{
-    if (!v.length) return;
-    html += `<div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px">${k.replace(/_/g,' ')}</div>`;
-    if (typeof v[0]==='object') {
-      // Array of objects
-      html += `<table class="stage-table"><tbody>`;
-      v.slice(0,8).forEach(row=>{
-        const vals = Object.values(row);
-        html += `<tr><td>${vals[0]||''}</td><td>${vals.slice(1).join(' · ')}</td></tr>`;
-      });
-      html += `</tbody></table>`;
-    } else {
-      // Array of strings
-      html += v.map(s=>`<div class="stage-raw">→ ${s}</div>`).join('');
-    }
+  // Key metrics to highlight per stage
+  const highlights = {
+    S1: ['model','hull_type','loa_m','boa_m','config','tier','market','pax','crew'],
+    S2: ['loa_m','boa_m','draft_m','main_hull_beam','waterplane_area_m2','wetted_surface_m2','block_coeff'],
+    S3: ['displacement_t','lightship_t','gmt_m','stability_class','resistance_kn','trim_m','lcb_m'],
+    S4: ['lightship_t','payload_used_t','payload_remaining_t','total_displacement_t','lcg_m','vcg_m','trim_status'],
+    S5: ['total_zones','main_deck_zones','upper_deck_zones','lower_deck_zones','foh_ready_zones','circulation_efficiency'],
+    S6: ['mesh_count','total_interior_volume_m3','deck_surface_area_m2','hull_surface_area_m2','equipment_meshes'],
+    S7: ['overall_status','feasibility_score','price','displacement_t','gmt_m','equipment_items','pipeline_hash'],
+  };
+  const keys = highlights[stageId] || Object.keys(result).filter(k=>typeof result[k]!=='object'&&!Array.isArray(result[k])).slice(0,8);
+  
+  // Status badge colours
+  const statusCol = {pass:'var(--green)',warn:'var(--amber)',fail:'var(--red)',balanced:'var(--green)',excellent:'var(--green)'};
+  
+  let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  keys.forEach(k => {
+    const v = result[k];
+    if (v===undefined||v===null) return;
+    const col = statusCol[String(v)] || 'var(--gl)';
+    const label = k.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase());
+    html += `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:2px;padding:8px 10px">
+      <div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px">${label}</div>
+      <div style="font-size:12px;color:${col};font-weight:400">${v}</div>
+    </div>`;
   });
+  html += '</div>';
+
+  // Checks array — show as status rows
+  if (result.checks?.length) {
+    html += `<div style="font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Feasibility Checks</div>`;
+    result.checks.forEach(c => {
+      const dot = c.status==='pass'?'var(--green)':c.status==='warn'?'var(--amber)':'var(--red)';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="width:6px;height:6px;border-radius:50%;background:${dot};flex-shrink:0"></div>
+        <span style="font-size:10px;color:var(--g3);flex:1">${c.desc||c.item||''}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gl)">${c.value||c.val||''}</span>
+      </div>`;
+    });
+  }
+  // Warnings
+  if (result.warnings?.length) {
+    html += `<div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:6px">Warnings</div>`;
+    result.warnings.forEach(w => {
+      html += `<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:10px;color:var(--amber)"><span>⚠</span>${w}</div>`;
+    });
+  }
+  // Recommendations  
+  if (result.recommendations?.length) {
+    html += `<div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--tl);margin-bottom:6px">Recommendations</div>`;
+    result.recommendations.forEach(r => {
+      html += `<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:10px;color:var(--g3)"><span style="color:var(--tl)">→</span>${r}</div>`;
+    });
+  }
+  // Summary statement
+  if (result.summary_statement) {
+    html += `<div style="margin-top:10px;padding:10px 12px;background:rgba(26,123,140,0.08);border:1px solid rgba(26,123,140,0.2);border-radius:2px;font-size:11px;color:var(--g3);line-height:1.7">${result.summary_statement}</div>`;
+  }
   body.innerHTML = html;
 }
 
@@ -3002,19 +3251,38 @@ function buildReport() {
 
   ${placed.length>0?`
   <div class="report-section">
-    <div class="rs-head">Equipment Manifest — ${placed.length} Items · ${addedWt.toFixed(2)}t Total</div>
+    <div class="rs-head">Equipment Manifest — ${placed.length} Items · ${addedWt.toFixed(2)}t Added</div>
+    <!-- Category summary chips -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      ${Object.entries(placed.reduce((acc,p)=>{acc[p.cat]=(acc[p.cat]||0)+1;return acc;},{})).map(([cat,cnt])=>
+        `<div style="padding:3px 10px;border:1px solid var(--b);border-radius:2px;font-family:'DM Mono',monospace;font-size:8px;color:var(--g2)">${cat} <span style="color:var(--gl)">${cnt}</span></div>`
+      ).join('')}
+    </div>
     <table class="eq-report-table">
-      <thead><tr><th>Item</th><th>Category</th><th>Zone</th><th>Weight t</th></tr></thead>
+      <thead><tr><th style="width:40%">Equipment</th><th>Category</th><th>Zone</th><th>Dimensions</th><th>Weight</th></tr></thead>
       <tbody>
-        ${placed.map(p=>`<tr>
-          <td style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:1px;background:${cs(p.color)};flex-shrink:0"></div>${p.name}</td>
-          <td style="color:var(--g2)">${p.cat}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">${p.zoneId}</td>
-          <td>${p.wt.toFixed(3)}</td>
-        </tr>`).join('')}
+        ${placed.map((p,i)=>{
+          const eq = EQUIPMENT.find(e=>e.id===(p.eqId||p.equipId));
+          const dims = eq ? eq.dim.join('×')+'m' : '—';
+          return `<tr style="${i%2===0?'background:rgba(255,255,255,0.015)':''}">
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:10px;height:10px;border-radius:2px;background:${cs(p.color)};flex-shrink:0;box-shadow:0 0 4px ${cs(p.color)}55"></div>
+                <div>
+                  <div style="font-size:11px;color:var(--w)">${p.name}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1)">${eq?.desc?.slice(0,40)||''}</div>
+                </div>
+              </div>
+            </td>
+            <td><span style="padding:2px 6px;border:1px solid var(--b);border-radius:1px;font-family:'DM Mono',monospace;font-size:7px;color:var(--g2)">${p.cat}</span></td>
+            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">${p.zoneId}</td>
+            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--g2)">${dims}</td>
+            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gl)">${p.wt.toFixed(3)}t</td>
+          </tr>`;
+        }).join('')}
         <tr style="border-top:1px solid var(--b)">
-          <td colspan="3" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:9px">TOTAL ADDED WEIGHT</td>
-          <td style="color:var(--gl)">${addedWt.toFixed(3)}t</td>
+          <td colspan="4" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:9px;padding-top:8px">TOTAL ADDED WEIGHT</td>
+          <td style="color:var(--gl);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding-top:8px">${addedWt.toFixed(3)}t</td>
         </tr>
       </tbody>
     </table>
@@ -3075,9 +3343,11 @@ function buildReport() {
   </div>
 
   <div class="report-actions">
-    <button class="btn-report-dl" onclick="printReport()">↓ Export Report</button>
-    <button class="btn-sec" onclick="navTo(2)" style="padding:12px 20px">← Back to Studio</button>
-    <button class="btn-sec" onclick="navTo(3)" style="padding:12px 20px">← Back to Pipeline</button>
+    <button class="btn-report-dl" onclick="downloadPDF()" id="btn-pdf">↓ Download PDF</button>
+    <button class="btn-report-dl" style="background:var(--n4);color:var(--w);border:1px solid var(--b)" onclick="printReport()">⎙ Print</button>
+    <button class="btn-sec" onclick="saveDesignToURL()" style="padding:12px 20px">↗ Share Link</button>
+    <button class="btn-sec" onclick="navTo(2)" style="padding:12px 20px">← Studio</button>
+    <button class="btn-sec" onclick="navTo(3)" style="padding:12px 20px">← Pipeline</button>
   </div>
   `;
 
@@ -3116,26 +3386,235 @@ function makeReportFloorSVG(deckFilter) {
   return svg;
 }
 
+
+// ─── PDF Download ─────────────────────────────────────────────
+async function downloadPDF() {
+  const btn = document.getElementById('btn-pdf');
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
+  toast('Preparing PDF — this takes a few seconds…');
+  try {
+    // Load jsPDF dynamically
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const M = MODEL_DB[APP.model];
+    const P = APP.pipelineResult || {};
+    const s7 = P.S7 || {};
+    const margin = 20;
+    const pw = 210 - margin*2; // usable width
+    let y = margin;
+
+    // Helper functions
+    const addText = (text, x, fontSize, bold, color) => {
+      doc.setFontSize(fontSize||10);
+      doc.setFont('helvetica', bold?'bold':'normal');
+      doc.setTextColor(...(color||[30,30,30]));
+      doc.text(String(text), x||margin, y);
+    };
+    const nl = (gap) => { y += gap||6; };
+    const line = () => { doc.setDrawColor(200,168,76); doc.setLineWidth(0.3); doc.line(margin, y, 210-margin, y); nl(4); };
+    const checkPage = (needed) => { if (y + needed > 280) { doc.addPage(); y = margin; } };
+
+    // Cover
+    doc.setFillColor(5,9,15);
+    doc.rect(0,0,210,297,'F');
+    doc.setFillColor(201,168,76);
+    doc.rect(0,0,210,4,'F');
+
+    y = 30;
+    addText('AQUASTRA', margin, 28, true, [201,168,76]);
+    nl(10);
+    addText('Design & Engineering Report', margin, 16, false, [238,235,228]);
+    nl(9);
+    addText(s7.project_name||APP.projectName||APP.model+' Design', margin, 13, false, [180,180,180]);
+    nl(7);
+    addText(APP.model+' '+M.name+' · '+M.hull+' · '+APP.config+' · '+APP.tier, margin, 10, false, [120,120,120]);
+    nl(7);
+    addText(new Date().toLocaleDateString('en-AE',{day:'2-digit',month:'long',year:'numeric'}), margin, 9, false, [100,100,100]);
+    nl(8);
+    addText('AquaStra Marine Industries · Sharjah, UAE · Confidential', margin, 8, false, [80,80,80]);
+    nl(10);
+
+    // KPI row
+    const kpis = [
+      ['Displacement', (P.S3?.displacement_t||M.displacement)+'t'],
+      ['GMt', (P.S3?.gmt_m||M.gmt)+'m'],
+      ['Deck Area', (M.mainDeckArea+M.upperDeckArea)+'m²'],
+      ['Price', M.price[APP.tier]],
+    ];
+    const kpiW = pw/4;
+    kpis.forEach(([lbl,val],i) => {
+      const kx = margin + i*kpiW;
+      doc.setFillColor(15,25,45);
+      doc.roundedRect(kx, y, kpiW-3, 18, 2, 2, 'F');
+      doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+      doc.text(val, kx+3, y+10);
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
+      doc.text(lbl.toUpperCase(), kx+3, y+16);
+    });
+    nl(26);
+
+    // Summary
+    if (s7.summary_statement) {
+      checkPage(20);
+      doc.setFillColor(12,22,37);
+      doc.roundedRect(margin, y, pw, 16, 2, 2, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+      const lines = doc.splitTextToSize(s7.summary_statement, pw-6);
+      doc.text(lines.slice(0,2), margin+3, y+6);
+      nl(22);
+    }
+
+    // Section builder
+    const section = (title) => {
+      checkPage(12);
+      doc.setFillColor(12,22,37);
+      doc.rect(margin, y, pw, 8, 'F');
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+      doc.text(title.toUpperCase(), margin+3, y+5.5);
+      nl(12);
+    };
+
+    // Zone spec
+    section('Zone Specification');
+    const zones = getZones(APP.model, APP.config);
+    const zoneRows = zones.filter(z=>z.h>0).map(z=>[
+      z.id, z.name, z.deck.toUpperCase(),
+      Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(1)+'m²',
+      z.h.toFixed(1)+'m'
+    ]);
+    const zCols = [18,60,16,18,14];
+    const zHeaders = ['ID','Zone Name','Deck','Area','Height'];
+    // Header row
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(100,100,100);
+    let rx = margin;
+    zHeaders.forEach((h,i) => { doc.text(h, rx, y); rx+=zCols[i]; });
+    nl(2);
+    doc.setDrawColor(40,50,70); doc.setLineWidth(0.2); doc.line(margin,y,210-margin,y);
+    nl(3);
+    zoneRows.forEach((row,ri) => {
+      checkPage(6);
+      if (ri%2===0) { doc.setFillColor(12,18,30); doc.rect(margin,y-3,pw,5,'F'); }
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+      rx = margin;
+      row.forEach((cell,i) => {
+        const maxW = zCols[i]-2;
+        const txt = doc.splitTextToSize(String(cell),maxW)[0];
+        if (i===0) { doc.setTextColor(201,168,76); doc.setFont('helvetica','bold'); }
+        else { doc.setTextColor(176,180,188); doc.setFont('helvetica','normal'); }
+        doc.text(txt, rx, y);
+        rx += zCols[i];
+      });
+      nl(5);
+    });
+
+    // Equipment manifest
+    if (APP.placedItems.length > 0) {
+      nl(4); section('Equipment Manifest');
+      const placed = APP.placedItems.map(p=>{
+        const eq = EQUIPMENT.find(e=>e.id===(p.eqId||p.equipId));
+        return [eq?.name||p.eqId||'?', eq?.cat||'', p.zoneId, (p.wt||0).toFixed(3)+'t'];
+      });
+      const eCols = [60,25,20,20];
+      const eHeaders = ['Equipment','Category','Zone','Weight'];
+      doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(100,100,100);
+      rx = margin;
+      eHeaders.forEach((h,i) => { doc.text(h, rx, y); rx+=eCols[i]; });
+      nl(5);
+      placed.forEach((row,ri) => {
+        checkPage(6);
+        if (ri%2===0) { doc.setFillColor(12,18,30); doc.rect(margin,y-3,pw,5,'F'); }
+        doc.setFontSize(7); doc.setFont('helvetica','normal');
+        rx = margin;
+        row.forEach((cell,i) => {
+          doc.setTextColor(i===0?[238,235,228]:[140,140,140]);
+          doc.text(String(cell), rx, y);
+          rx += eCols[i];
+        });
+        nl(5);
+      });
+    }
+
+    // Engineering results
+    nl(4); section('Engineering Results');
+    const engRows = [
+      ['Displacement', (P.S3?.displacement_t||M.displacement)+'t'],
+      ['GM Transverse', (P.S3?.gmt_m||M.gmt)+'m'],
+      ['Stability Class', P.S3?.stability_class||M.stability],
+      ['Resistance', (P.S3?.resistance_kn||M.resistance)+'kN'],
+      ['Lightship', (P.S4?.lightship_t||M.lightship)+'t'],
+      ['Trim Status', P.S4?.trim_status||'balanced'],
+    ];
+    engRows.forEach(([k,v]) => {
+      checkPage(6);
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120); doc.text(k, margin, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(238,235,228); doc.text(String(v), margin+60, y);
+      nl(6);
+    });
+
+    // Checks
+    nl(4); section('Feasibility Checks');
+    (M.checks||[]).forEach(c => {
+      checkPage(6);
+      const col = c.status==='pass'?[76,172,124]:c.status==='warn'?[201,136,76]:[201,76,76];
+      doc.setFillColor(...col); doc.circle(margin+2, y-1.5, 1.5, 'F');
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+      doc.text(c.desc||'', margin+6, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(226,196,122);
+      doc.text(c.val||'', margin+110, y);
+      nl(6);
+    });
+
+    // Warnings
+    if (s7.warnings?.length) {
+      nl(4); section('Warnings & Notes');
+      s7.warnings.forEach(w => {
+        checkPage(8);
+        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(201,136,76);
+        const wLines = doc.splitTextToSize('⚠ '+w, pw-4);
+        doc.text(wLines, margin, y);
+        nl(wLines.length * 5 + 2);
+      });
+    }
+
+    // Footer on every page
+    const totalPages = doc.getNumberOfPages();
+    for (let p=1; p<=totalPages; p++) {
+      doc.setPage(p);
+      doc.setFillColor(201,168,76); doc.rect(0,293,210,4,'F');
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text('AquaStra Marine Industries · Sharjah, UAE · Confidential', margin, 291);
+      doc.text(`Page ${p} of ${totalPages}`, 210-margin, 291, {align:'right'});
+      doc.text(s7.pipeline_hash||M.pipelineHash||'', 105, 291, {align:'center'});
+    }
+
+    // Save
+    const filename = (APP.projectName||APP.model).replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    doc.save('AquaStra_'+filename+'_report.pdf');
+    toast('PDF downloaded ✓');
+  } catch(e) {
+    console.error('PDF error:', e);
+    toast('PDF generation failed — using print instead');
+    printReport();
+  } finally {
+    if (btn) { btn.textContent = '↓ Download PDF'; btn.disabled = false; }
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 function printReport() {
-  const content = document.getElementById('report-content').innerHTML;
-  const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>AquaStra Report — ${APP.model}</title>
-    <style>body{font-family:sans-serif;background:#fff;color:#111;padding:20px;max-width:1000px;margin:0 auto}
-    .report-section{border:1px solid #ddd;padding:16px;margin-bottom:16px;border-radius:4px}
-    .rs-head{font-weight:600;margin-bottom:12px;text-transform:uppercase;font-size:11px;letter-spacing:0.12em}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
-    th{font-size:10px;text-transform:uppercase;color:#666}
-    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-    .kpi{border:1px solid #ddd;padding:12px;border-radius:4px}
-    .kpi-val{font-size:24px;font-weight:600;color:#0A3050}
-    </style></head><body>${content}</body></html>`);
-  win.document.close();
-  win.print();
+  window.print();
 }
 
 // Mini 3D render for report cover
-let miniRenderer;
 function initMini3D() {
   const cv = document.getElementById('report-canvas');
   if (!cv || miniRenderer) return;
@@ -3267,14 +3746,104 @@ function placeEqAt(eqId, nx, ny) {
     pos={x:M.loa/2,y:0,z:0};zoneId='MD-04';
   }
   const id='pi-'+Date.now();
-  APP.placedItems.push({id,eqId,pos,zoneId,wt:eq.wt});
+  const placed = {id,eqId,pos,zoneId,wt:eq.wt,name:eq.name};
+  APP.placedItems.push(placed);
+  UNDO_STACK.push(placed);
   build3DEquipment();
   renderPlacedList();
   cancelPlace();
-  toast(`Placed: ${eq.name} → ${zoneId}`);
+  const tbItems = document.getElementById('tb-items');
+  if (tbItems) tbItems.textContent = APP.placedItems.length;
+  toast(`Placed: ${eq.name} → ${zoneId} · Ctrl+Z to undo`);
   if(zoneId&&zoneId!=='open') renderZoneDetail(zoneId);
 }
 
+
+
+function toggleCompare() {
+  const tbl = document.getElementById('compare-table');
+  const btn = document.getElementById('compare-btn');
+  const isShown = tbl.style.display !== 'none';
+  tbl.style.display = isShown ? 'none' : 'block';
+  btn.textContent = isShown ? 'Compare All Models ↕' : 'Hide Comparison ↑';
+  if (!isShown) buildCompareTable();
+}
+
+function buildCompareTable() {
+  const models = ['AQS-25','AQS-35','AQS-40','AQS-45','AQS-50'];
+  const rows = [
+    ['Hull type',        m => MODEL_DB[m].hull],
+    ['LOA',             m => MODEL_DB[m].loa+'m'],
+    ['BOA',             m => MODEL_DB[m].boa+'m'],
+    ['Main deck',       m => MODEL_DB[m].mainDeckArea+'m²'],
+    ['Upper deck',      m => MODEL_DB[m].upperDeckArea+'m²'],
+    ['Displacement',    m => MODEL_DB[m].displacement+'t'],
+    ['GM Transverse',   m => MODEL_DB[m].gmt+'m'],
+    ['Stability',       m => MODEL_DB[m].stability],
+    ['Standard price',  m => MODEL_DB[m].price.Standard],
+    ['Premium price',   m => MODEL_DB[m].price.Premium],
+    ['Luxury price',    m => MODEL_DB[m].price.Luxury],
+    ['Configurations',  m => MODEL_DB[m].configs.join(', ')],
+  ];
+  const tbody = document.getElementById('compare-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.map(([label, getter], ri) =>
+    `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);${ri%2===0?'background:rgba(255,255,255,0.015)':''}">
+      <td style="padding:7px 12px;color:var(--g2);font-family:'DM Mono',monospace;font-size:9px">${label}</td>
+      ${models.map(m => `<td style="padding:7px 12px;text-align:center;color:${APP.model===m?'var(--gold)':'var(--g3)'}${APP.model===m?';font-weight:500':''}">${getter(m)}</td>`).join('')}
+    </tr>`
+  ).join('');
+}
+
+// ─── Save/Load design to URL hash ────────────────────────────
+function saveDesignToURL() {
+  const data = {
+    m: APP.model,
+    c: APP.config,
+    t: APP.tier,
+    mk: APP.market,
+    o: [...APP.opts].join(','),
+    p: APP.projectName,
+    items: APP.placedItems.map(pi => ({
+      id: pi.id,
+      e: pi.eqId||pi.equipId,
+      z: pi.zoneId,
+      w: pi.wt,
+      x: pi.pos?.x?.toFixed(1),
+      y: pi.pos?.y?.toFixed(1),
+    }))
+  };
+  const hash = btoa(JSON.stringify(data)).replace(/=/g,'');
+  const url = window.location.href.split('#')[0] + '#d=' + hash;
+  navigator.clipboard?.writeText(url).then(()=>toast('Design link copied to clipboard!'))
+    .catch(()=>{ window.prompt('Copy this design link:', url); });
+}
+
+function loadDesignFromURL() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#d=')) return;
+  try {
+    const raw = atob(hash.slice(3));
+    const data = JSON.parse(raw);
+    if (!data.m || !MODEL_DB[data.m]) return;
+    APP.model = data.m;
+    APP.config = data.c || MODEL_DB[data.m].configs[0];
+    APP.tier = data.t || 'Standard';
+    APP.market = data.mk || 'commercial_hospitality';
+    APP.opts = new Set((data.o||'').split(',').filter(Boolean));
+    APP.projectName = data.p || APP.model+' Design';
+    if (data.items?.length) {
+      APP.placedItems = data.items.map(it => ({
+        id: it.id||('pi-'+Math.random().toString(36).slice(2)),
+        eqId: it.e, zoneId: it.z, wt: it.w||0,
+        pos: {x:parseFloat(it.x||0), y:parseFloat(it.y||0), z:0},
+        name: EQUIPMENT.find(e=>e.id===it.e)?.name||it.e
+      }));
+    }
+    toast('Design loaded from shared link!');
+    return true;
+  } catch(e) { return false; }
+}
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
@@ -3327,6 +3896,9 @@ buildSelectionScreen();
 
 // Init nav state
 navTo(1);
+
+// Load design from URL hash if present
+loadDesignFromURL();
 
 // Check for existing session (auto-bypass gate on refresh)
 // Small delay so DOM is ready
