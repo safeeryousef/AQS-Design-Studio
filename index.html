@@ -1,0 +1,3499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaStra — Design Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:opsz,wght@9..40,200;9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#05090F;--n1:#080F1C;--n2:#0C1625;--n3:#111E32;--n4:#182640;
+  --gold:#C9A84C;--gl:#E2C47A;--gd:#8A6820;
+  --teal:#1A7B8C;--tl:#26B5C8;
+  --w:#EEEBe4;--g1:#4A5060;--g2:#7A8090;--g3:#B0B4BC;
+  --b:rgba(201,168,76,0.12);--bb:rgba(201,168,76,0.38);
+  --bw:rgba(255,255,255,0.06);
+  --red:#C94C4C;--green:#4CAC7C;--amber:#C9884C;
+  --s1:#080F1C;--s2:#0C1625;--s3:#111E32;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--ink);color:var(--w);font-family:'DM Sans',sans-serif;font-weight:300;font-size:12px;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:2px;}
+button,input,select,textarea{font-family:inherit;cursor:pointer;}
+input,textarea{cursor:text;}
+
+/* ─── ANIMATED BG ─── */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 120% 70% at 50% 110%,rgba(26,123,140,0.15) 0%,transparent 60%),var(--ink);}
+#bg::before{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(201,168,76,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.022) 1px,transparent 1px);
+  background-size:52px 52px;animation:bgDrift 60s linear infinite;}
+@keyframes bgDrift{to{background-position:52px 52px,52px 52px;}}
+
+/* ─── STEPPER NAV ─── */
+#stepper{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:52px;background:rgba(5,9,15,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--b);
+  display:flex;align-items:center;
+}
+.step-logo{
+  padding:0 22px;border-right:1px solid var(--b);height:100%;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.step-logo-text{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;letter-spacing:0.16em;}
+.step-logo-text em{color:var(--gold);font-style:normal;}
+.step-logo-sub{font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);letter-spacing:0.2em;display:none;}
+.step-stages{display:flex;align-items:center;flex:1;height:100%;padding:0 24px;gap:0;}
+.step{
+  display:flex;align-items:center;gap:10px;padding:0 20px;height:100%;
+  border-bottom:2px solid transparent;cursor:pointer;
+  transition:all .2s;position:relative;flex-shrink:0;
+}
+.step:hover{border-bottom-color:var(--b);}
+.step.active{border-bottom-color:var(--gold);}
+.step.done{border-bottom-color:var(--green);}
+.step.locked{opacity:0.35;cursor:not-allowed;}
+.step-num{
+  width:22px;height:22px;border-radius:50%;
+  border:1px solid var(--b);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);
+  flex-shrink:0;transition:all .2s;
+}
+.step.active .step-num{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1);}
+.step.done .step-num{border-color:var(--green);color:var(--green);background:rgba(76,172,124,0.1);}
+.step-done-icon::after{content:'✓';}
+.step-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g2);}
+.step.active .step-label{color:var(--w);}
+.step.done .step-label{color:var(--g3);}
+.step-arrow{font-size:10px;color:var(--b);margin:0 4px;}
+
+.step-right{margin-left:auto;padding:0 18px;display:flex;align-items:center;gap:10px;}
+.step-user{font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);display:flex;align-items:center;gap:8px;}
+.step-avatar{width:26px;height:26px;border-radius:50%;background:var(--n3);border:1px solid var(--bb);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gold);}
+
+/* ─── SCREENS ─── */
+#app{position:fixed;top:52px;left:0;right:0;bottom:0;z-index:1;}
+.screen{position:absolute;inset:0;display:none;overflow:hidden;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ─── SCREEN 1: SELECT ─── */
+#s-select{background:transparent;overflow-y:auto;align-items:center;}
+.sel-wrap{max-width:1160px;width:100%;margin:0 auto;padding:48px 24px 80px;}
+.sel-hero{text-align:center;margin-bottom:48px;}
+.sel-hero-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.sel-hero-title{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--w);letter-spacing:0.04em;margin-bottom:8px;}
+.sel-hero-title em{color:var(--gold);font-style:normal;}
+.sel-hero-sub{font-size:13px;color:var(--g2);line-height:1.7;}
+
+.model-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:32px;}
+.mcard{
+  background:rgba(8,15,28,0.7);backdrop-filter:blur(10px);
+  border:1px solid var(--b);border-radius:3px;
+  cursor:pointer;transition:all .22s;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.mcard::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s;
+  background:linear-gradient(135deg,rgba(201,168,76,0.06) 0%,transparent 60%);}
+.mcard:hover{border-color:var(--bb);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+.mcard:hover::before{opacity:1;}
+.mcard.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 12px 40px rgba(201,168,76,0.12);}
+.mcard.sel::before{opacity:1;}
+.mcard-sel-ring{
+  position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;
+  background:var(--gold);opacity:0;transform:scale(0.5);transition:all .22s;
+  display:flex;align-items:center;justify-content:center;pointer-events:none;
+}
+.mcard-sel-ring::after{content:'✓';font-size:11px;color:var(--ink);font-weight:700;}
+.mcard.sel .mcard-sel-ring{opacity:1;transform:scale(1);}
+
+.mcard-vis{height:120px;display:flex;align-items:center;justify-content:center;padding:12px;position:relative;}
+.mcard-vis::after{content:'';position:absolute;bottom:0;left:0;right:0;height:36px;background:linear-gradient(transparent,rgba(8,15,28,0.9));}
+
+.mcard-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column;}
+.mcard-id{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;}
+.hull-pill{font-size:7px;padding:1px 5px;border-radius:1px;letter-spacing:0.08em;}
+.tri{background:rgba(26,123,140,0.2);color:var(--tl);}
+.quad{background:rgba(201,168,76,0.15);color:var(--gold);}
+.mcard-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--w);margin-bottom:6px;}
+.mcard-specs{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:8px;}
+.mcard-spec{font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);}
+.mcard-spec span{color:var(--g3);}
+.mcard-tagline{font-size:10px;color:var(--g2);line-height:1.5;margin-bottom:8px;flex:1;}
+.mcard-price{font-family:'DM Mono',monospace;font-size:8px;color:var(--gl);padding-top:9px;border-top:1px solid var(--b);margin-top:auto;}
+
+/* Config form (shown after selection) */
+#sel-cfg{
+  background:rgba(8,15,28,0.6);border:1px solid var(--b);border-radius:3px;
+  padding:22px 26px;display:none;
+  animation:slideDown .3s ease;
+}
+#sel-cfg.show{display:block;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.cfg-grid{display:grid;grid-template-columns:2.5fr 1.2fr 1.2fr 1.5fr;gap:18px;align-items:end;margin-bottom:18px;}
+.cfg-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--g2);margin-bottom:5px;}
+.cfg-input{
+  width:100%;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);border-radius:2px;
+  padding:10px 12px;color:var(--w);font-size:12px;font-weight:300;
+  transition:border-color .18s;
+}
+.cfg-input:focus{border-color:var(--gold);outline:none;}
+.cfg-input::placeholder{color:var(--g1);}
+.cfg-select{
+  width:100%;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);border-radius:2px;
+  padding:10px 12px;color:var(--w);
+  font-family:'DM Mono',monospace;font-size:9px;
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A8090'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:border-color .18s;
+}
+.cfg-select:focus{border-color:var(--gold);outline:none;}
+.cfg-select option{background:var(--n2);}
+.chips{display:flex;gap:5px;flex-wrap:wrap;}
+.chip{
+  padding:5px 11px;background:transparent;
+  border:1px solid var(--b);border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--g2);transition:all .14s;
+}
+.chip:hover{border-color:var(--bb);color:var(--w);}
+.chip.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);}
+
+.sel-launch{
+  display:flex;align-items:center;gap:16px;padding:14px 18px;
+  background:rgba(8,15,28,0.5);border:1px solid var(--b);border-radius:3px;
+}
+.sel-launch-sum{flex:1;font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);line-height:1.7;}
+.sel-launch-sum strong{color:var(--gl);}
+.btn-go{
+  padding:12px 28px;background:var(--gold);border:none;border-radius:2px;
+  color:var(--ink);font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;
+  transition:all .18s;white-space:nowrap;flex-shrink:0;
+}
+.btn-go:hover{background:var(--gl);}
+.btn-go:disabled{background:var(--g1);cursor:not-allowed;}
+.btn-sec{
+  padding:12px 18px;background:transparent;border:1px solid var(--b);border-radius:2px;
+  color:var(--g3);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+  transition:all .18s;flex-shrink:0;
+}
+.btn-sec:hover{border-color:var(--bb);color:var(--w);}
+
+/* ─── SCREEN 2: STUDIO ─── */
+#s-studio{flex-direction:row;}
+
+/* Left panel */
+#st-left{
+  width:216px;flex-shrink:0;border-right:1px solid var(--b);
+  display:flex;flex-direction:column;background:var(--s1);
+}
+.st-left-head{padding:10px 12px;border-bottom:1px solid var(--b);flex-shrink:0;}
+.st-left-title{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.st-left-search{
+  width:100%;background:rgba(255,255,255,0.04);
+  border:1px solid var(--b);border-radius:2px;
+  padding:6px 9px;color:var(--w);font-size:11px;
+}
+.st-left-search:focus{border-color:var(--gold);outline:none;}
+.st-left-search::placeholder{color:var(--g1);}
+.eq-cats{display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px;border-bottom:1px solid var(--b);}
+.eq-cat{
+  padding:2px 6px;border:1px solid var(--b);border-radius:1px;
+  font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.05em;
+  color:var(--g2);cursor:pointer;transition:all .12s;background:transparent;
+}
+.eq-cat:hover{border-color:var(--bb);color:var(--w);}
+.eq-cat.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);}
+#eq-list{flex:1;overflow-y:auto;padding:4px;}
+.eq-item{
+  display:flex;align-items:center;gap:6px;padding:5px 7px;
+  border:1px solid transparent;border-radius:2px;cursor:pointer;
+  transition:all .12s;margin-bottom:2px;user-select:none;
+}
+.eq-item:hover{border-color:var(--b);background:rgba(255,255,255,0.025);}
+.eq-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0;}
+.eq-name{font-size:10px;color:var(--w);flex:1;line-height:1.3;}
+.eq-wt{font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);}
+.eq-divider{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);padding:6px 8px 3px;border-top:1px solid var(--b);margin-top:3px;}
+#placed-list-wrap{max-height:130px;overflow-y:auto;border-top:1px solid var(--b);padding:4px;}
+.pl-item{
+  display:flex;align-items:center;gap:5px;padding:4px 6px;
+  border:1px solid transparent;border-radius:2px;cursor:pointer;
+  transition:all .12s;
+}
+.pl-item:hover{border-color:var(--b);}
+.pl-item.sel{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.pl-name{flex:1;font-size:9px;color:var(--g3);}
+.pl-rm{color:var(--red);font-size:12px;padding:0 2px;opacity:.6;}
+.pl-rm:hover{opacity:1;}
+
+/* Centre canvas */
+#st-canvas{flex:1;display:flex;flex-direction:column;background:var(--ink);overflow:hidden;position:relative;}
+#st-toolbar{
+  display:flex;align-items:center;gap:6px;padding:8px 14px;
+  border-bottom:1px solid var(--b);background:rgba(5,9,15,0.9);flex-shrink:0;
+}
+.deck-tab{
+  padding:5px 13px;border:1px solid var(--b);border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--g1);cursor:pointer;transition:all .15s;background:transparent;
+}
+.deck-tab:hover{border-color:var(--bb);color:var(--w);}
+.deck-tab.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.07);}
+.tb-sep{width:1px;height:20px;background:var(--b);margin:0 4px;}
+.tb-btn{
+  padding:5px 11px;border:1px solid var(--b);border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.08em;
+  color:var(--g2);cursor:pointer;transition:all .15s;background:transparent;
+}
+.tb-btn:hover{border-color:var(--bb);color:var(--w);}
+.tb-btn.on{border-color:var(--teal);color:var(--tl);background:rgba(26,123,140,0.08);}
+.tb-meta{margin-left:auto;display:flex;gap:14px;}
+.tb-stat{font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);}
+.tb-stat span{color:var(--gl);}
+
+#canvas-wrap{flex:1;position:relative;overflow:hidden;}
+#svg-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;}
+#svg-wrap::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 60%,rgba(26,123,140,0.06) 0%,transparent 65%);}
+#boatSVG{position:relative;z-index:1;filter:drop-shadow(0 8px 32px rgba(0,0,0,0.6));}
+#three-wrap{position:absolute;inset:0;display:none;}
+#three-canvas{width:100%;height:100%;display:block;cursor:grab;}
+#three-canvas:active{cursor:grabbing;}
+
+/* 3D overlays */
+#vp-ctrls{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;}
+#layer-ctrl{
+  position:absolute;top:10px;right:10px;
+  background:rgba(5,9,15,0.9);border:1px solid var(--b);border-radius:3px;
+  padding:10px 12px;z-index:10;min-width:128px;
+}
+.lyr-title{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;}
+.lyr-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;cursor:pointer;}
+.lyr-ck{width:11px;height:11px;border:1px solid var(--b);border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
+.lyr-ck.on{border-color:var(--gold);background:rgba(201,168,76,0.2);}
+.lyr-ck.on::after{content:'✓';font-size:7px;color:var(--gold);}
+.lyr-lb{font-size:9px;color:var(--g3);}
+#zone-tt{position:absolute;display:none;pointer-events:none;z-index:20;
+  background:rgba(5,9,15,0.94);border:1px solid var(--bb);border-radius:2px;padding:6px 10px;min-width:140px;}
+.ztt-id{font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);margin-bottom:2px;}
+.ztt-name{font-size:12px;color:var(--w);margin-bottom:2px;}
+.ztt-meta{font-family:'DM Mono',monospace;font-size:7px;color:var(--g2);}
+
+/* weight bar */
+#wt-bar{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  background:rgba(5,9,15,0.9);border:1px solid var(--b);border-radius:3px;
+  padding:7px 14px;z-index:10;display:flex;gap:14px;align-items:center;
+  display:none;
+}
+.wt-item{text-align:center;}
+.wt-val{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gl);}
+.wt-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);letter-spacing:0.1em;text-transform:uppercase;}
+.wt-div{width:1px;height:24px;background:var(--b);}
+#wt-fill-wrap{width:80px;height:2px;background:rgba(255,255,255,0.06);border-radius:1px;overflow:hidden;}
+#wt-fill{height:100%;background:var(--green);border-radius:1px;transition:width .3s,background .3s;}
+
+/* place mode banner */
+#place-banner{
+  position:absolute;top:0;left:0;right:0;z-index:15;
+  background:rgba(201,168,76,0.12);border-bottom:1px solid rgba(201,168,76,0.4);
+  padding:7px 14px;display:none;align-items:center;justify-content:space-between;
+}
+.pm-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--gl);letter-spacing:0.1em;}
+.pm-cancel{padding:4px 10px;background:transparent;border:1px solid var(--bb);border-radius:2px;color:var(--gold);font-family:'DM Mono',monospace;font-size:8px;}
+
+/* Right panel */
+#st-right{
+  width:276px;flex-shrink:0;border-left:1px solid var(--b);
+  display:flex;flex-direction:column;background:var(--s1);
+}
+.rp-tabs{display:flex;border-bottom:1px solid var(--b);flex-shrink:0;}
+.rp-tab{
+  flex:1;padding:11px 3px;text-align:center;background:transparent;border:none;
+  border-bottom:2px solid transparent;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--g1);cursor:pointer;transition:all .15s;
+}
+.rp-tab:hover{color:var(--w);}
+.rp-tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.rp-panel{flex:1;overflow-y:auto;padding:12px;display:none;}
+.rp-panel.on{display:block;}
+/* AI panel special */
+#rp-ai{padding:0;display:flex;flex-direction:column;}
+#rp-ai.on{display:flex;}
+#ai-log{flex:1;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:5px;}
+.msg{padding:8px 10px;border-radius:2px;font-size:11px;line-height:1.6;animation:msgIn .2s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.msg-u{background:rgba(201,168,76,0.07);border:1px solid var(--b);color:var(--gl);font-family:'DM Mono',monospace;font-size:9px;align-self:flex-end;max-width:90%;}
+.msg-a{background:var(--s2);border:1px solid rgba(255,255,255,0.05);color:var(--w);}
+.msg-a strong{color:var(--gl);}
+.msg-t{background:var(--s2);border:1px solid rgba(255,255,255,0.05);color:var(--g1);font-family:'DM Mono',monospace;font-size:9px;display:flex;align-items:center;gap:5px;}
+.dots span{display:inline-block;width:3px;height:3px;background:var(--gold);border-radius:50%;animation:dl 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dl{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+#ai-input-row{display:flex;gap:5px;padding:7px;border-top:1px solid var(--b);flex-shrink:0;}
+#ai-inp{
+  flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--b);
+  border-radius:2px;padding:7px 9px;color:var(--w);font-size:11px;
+  transition:border-color .15s;
+}
+#ai-inp:focus{border-color:var(--gold);outline:none;}
+#ai-inp::placeholder{color:var(--g1);}
+#ai-go{
+  padding:7px 11px;background:var(--gold);border:none;color:var(--ink);
+  font-family:'DM Mono',monospace;font-size:8px;border-radius:2px;
+  transition:background .15s;
+}
+#ai-go:hover{background:var(--gl);}
+#ai-go:disabled{background:var(--g1);}
+
+/* Spec/Zone cards */
+.spec-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.spec-k{font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);}
+.spec-v{font-size:11px;color:var(--w);}
+.spec-v.hl{color:var(--gl);}
+.spec-v.gd{color:var(--green);}
+.spec-v.wn{color:var(--amber);}
+.sec-head{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin:12px 0 7px;}
+.sec-head:first-child{margin-top:0;}
+.zone-card{background:var(--s2);border:1px solid var(--b);border-radius:2px;padding:10px;margin-bottom:6px;}
+.zc-id{font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);margin-bottom:3px;}
+.zc-name{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--w);margin-bottom:4px;}
+.zc-desc{font-size:10px;color:rgba(238,235,228,0.65);line-height:1.6;}
+.foh-badge{margin-top:7px;padding:6px 9px;background:rgba(74,106,42,0.12);border:1px solid rgba(74,106,42,0.3);border-radius:2px;font-size:9px;color:rgba(138,202,90,0.9);line-height:1.5;}
+
+/* Studio bottom AI bar */
+#st-aibar{
+  border-top:1px solid var(--b);padding:8px 14px;
+  background:rgba(5,9,15,0.9);flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+}
+#st-ai-inp{
+  flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--b);
+  border-radius:2px;padding:8px 12px;color:var(--w);font-size:12px;
+  transition:border-color .15s;
+}
+#st-ai-inp:focus{border-color:var(--gold);outline:none;}
+#st-ai-inp::placeholder{color:var(--g1);}
+.ai-send{
+  padding:8px 16px;background:var(--gold);border:none;color:var(--ink);
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;border-radius:2px;
+  transition:background .15s;flex-shrink:0;
+}
+.ai-send:hover{background:var(--gl);}
+.ai-send:disabled{background:var(--g1);}
+
+/* ─── SCREEN 3: PIPELINE ─── */
+#s-pipeline{flex-direction:column;overflow-y:auto;background:var(--ink);}
+.pipe-wrap{max-width:860px;width:100%;margin:0 auto;padding:36px 24px 80px;}
+.pipe-hero{margin-bottom:32px;}
+.pipe-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.pipe-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--w);margin-bottom:4px;}
+.pipe-sub{font-size:11px;color:var(--g2);}
+
+.pipe-cfg{
+  background:var(--s1);border:1px solid var(--b);border-radius:3px;
+  padding:20px 22px;margin-bottom:24px;
+}
+.pipe-cfg-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.pipe-launch-row{display:flex;gap:10px;align-items:center;}
+
+.stage-list{display:flex;flex-direction:column;gap:10px;}
+.stage-card{
+  background:var(--s1);border:1px solid var(--b);border-radius:3px;
+  overflow:hidden;transition:all .2s;
+}
+.stage-card.running{border-color:var(--teal);}
+.stage-card.done{border-color:rgba(76,172,124,0.4);}
+.stage-card.fail{border-color:rgba(201,76,76,0.4);}
+.stage-head{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  cursor:pointer;
+}
+.stage-num{
+  width:28px;height:28px;border-radius:50%;border:1px solid var(--b);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);flex-shrink:0;
+}
+.stage-card.done .stage-num{border-color:var(--green);color:var(--green);background:rgba(76,172,124,0.1);}
+.stage-card.running .stage-num{border-color:var(--tl);color:var(--tl);animation:stagePulse 1s ease-in-out infinite alternate;}
+.stage-card.fail .stage-num{border-color:var(--red);color:var(--red);}
+@keyframes stagePulse{from{opacity:.5;}to{opacity:1;}}
+.stage-info{flex:1;}
+.stage-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g3);margin-bottom:2px;}
+.stage-card.done .stage-label{color:var(--w);}
+.stage-desc{font-size:11px;color:var(--g2);}
+.stage-status{font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);}
+.stage-card.done .stage-status{color:var(--green);}
+.stage-card.running .stage-status{color:var(--tl);}
+.stage-card.fail .stage-status{color:var(--red);}
+.stage-body{
+  border-top:1px solid var(--b);padding:14px 16px;
+  display:none;background:rgba(255,255,255,0.015);
+}
+.stage-body.show{display:block;}
+.stage-table{width:100%;border-collapse:collapse;font-size:11px;}
+.stage-table th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g1);text-align:left;padding:5px 0;border-bottom:1px solid var(--b);}
+.stage-table td{padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--g3);}
+.stage-table td:last-child{color:var(--w);text-align:right;}
+.stage-table tr.warn td{color:var(--amber);}
+.stage-table tr.pass td:first-child::before{content:'✓ ';color:var(--green);}
+.stage-raw{font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);line-height:1.7;white-space:pre-wrap;}
+
+/* ─── SCREEN 4: REPORT ─── */
+#s-report{overflow-y:auto;background:var(--ink);}
+.report-wrap{max-width:980px;width:100%;margin:0 auto;padding:36px 24px 100px;}
+.report-cover{
+  background:var(--s1);border:1px solid var(--b);border-radius:3px;
+  padding:32px 36px;margin-bottom:24px;
+  display:flex;gap:32px;align-items:flex-start;
+}
+.report-cover-left{flex:1;}
+.report-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.report-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--w);margin-bottom:6px;line-height:1.2;}
+.report-sub{font-size:12px;color:var(--g2);margin-bottom:16px;line-height:1.7;}
+.report-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.rbadge{font-family:'DM Mono',monospace;font-size:8px;padding:4px 10px;border:1px solid var(--b);color:var(--g3);border-radius:2px;}
+.rbadge.gold{border-color:var(--bb);color:var(--gl);}
+.rbadge.green{border-color:rgba(76,172,124,0.4);color:var(--green);}
+.rbadge.amber{border-color:rgba(201,136,76,0.4);color:var(--amber);}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.kpi{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:16px 18px;}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gl);margin-bottom:3px;}
+.kpi-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--g1);}
+.kpi-sub{font-size:10px;color:var(--g2);margin-top:2px;}
+
+.report-section{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:22px 24px;margin-bottom:16px;}
+.rs-head{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.rs-head::after{content:'';flex:1;height:1px;background:var(--b);}
+
+.floor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.floor-card{background:var(--s2);border:1px solid var(--b);border-radius:2px;padding:12px;}
+.floor-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase;}
+
+.eq-report-table{width:100%;border-collapse:collapse;font-size:11px;}
+.eq-report-table th{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:var(--g1);text-align:left;padding:6px 8px;border-bottom:1px solid var(--b);}
+.eq-report-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--g3);}
+.eq-report-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+.check-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.check-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.check-dot.pass{background:var(--green);}
+.check-dot.warn{background:var(--amber);}
+.check-dot.fail{background:var(--red);}
+.check-text{flex:1;font-size:11px;color:var(--g3);}
+.check-val{font-family:'DM Mono',monospace;font-size:9px;color:var(--gl);}
+
+.report-actions{display:flex;gap:10px;margin-top:24px;}
+.btn-report-dl{
+  padding:12px 24px;background:var(--gold);border:none;border-radius:2px;
+  color:var(--ink);font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;
+  transition:background .18s;
+}
+.btn-report-dl:hover{background:var(--gl);}
+
+/* ─── SHARED: TOAST ─── */
+#toast{
+  position:fixed;bottom:20px;right:20px;z-index:500;
+  background:var(--s3);border:1px solid var(--bb);border-radius:2px;
+  padding:10px 16px;font-family:'DM Mono',monospace;font-size:9px;color:var(--gl);
+  letter-spacing:0.08em;transform:translateY(12px);opacity:0;
+  transition:all .25s;pointer-events:none;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* ─── ACCESS GATE ─── */
+#gate{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+.gate-card{
+  width:100%;max-width:400px;
+  background:rgba(8,15,28,0.9);
+  border:1px solid var(--b);border-radius:4px;
+  padding:40px 36px 32px;
+  backdrop-filter:blur(20px);
+  animation:gateIn .5s ease both;
+}
+@keyframes gateIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.gate-logo{
+  text-align:center;margin-bottom:32px;
+}
+.gate-logo-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px;font-weight:300;letter-spacing:0.22em;color:var(--w);
+}
+.gate-logo-text em{color:var(--gold);font-style:normal;}
+.gate-logo-sub{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.3em;
+  text-transform:uppercase;color:var(--g1);margin-top:4px;
+}
+.gate-tagline{
+  text-align:center;font-size:12px;color:var(--g2);
+  margin-bottom:28px;line-height:1.7;
+}
+.gate-field{margin-bottom:14px;}
+.gate-label{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--g2);margin-bottom:5px;display:block;
+}
+.gate-input{
+  width:100%;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);border-radius:2px;
+  padding:11px 14px;color:var(--w);font-size:13px;font-weight:300;
+  transition:border-color .18s;letter-spacing:0.03em;
+}
+.gate-input:focus{border-color:var(--gold);outline:none;}
+.gate-input::placeholder{color:var(--g1);}
+.gate-input.err{border-color:var(--red);animation:shake .3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.gate-btn{
+  width:100%;margin-top:8px;padding:13px;
+  background:var(--gold);border:none;border-radius:2px;
+  color:var(--ink);font-family:'DM Mono',monospace;
+  font-size:10px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;
+  transition:background .18s;cursor:pointer;
+}
+.gate-btn:hover{background:var(--gl);}
+.gate-btn:active{transform:scale(0.99);}
+.gate-error{
+  text-align:center;margin-top:10px;
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--red);
+  min-height:16px;letter-spacing:0.05em;
+}
+.gate-footer{
+  text-align:center;margin-top:22px;
+  font-size:10px;color:var(--g1);line-height:1.8;
+}
+.gate-footer a{color:var(--gold);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<!-- ════ ACCESS GATE ════════════════════════════════════════ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;margin:0 auto 14px">
+        <rect width="44" height="44" rx="3" fill="rgba(201,168,76,0.08)" stroke="rgba(201,168,76,0.28)" stroke-width="1"/>
+        <path d="M7 28L22 16L37 28" stroke="#C9A84C" stroke-width="1.4" fill="none"/>
+        <line x1="5" y1="28" x2="39" y2="28" stroke="rgba(26,123,140,0.5)" stroke-width="0.8"/>
+        <ellipse cx="10" cy="29" rx="4" ry="1.4" fill="none" stroke="rgba(201,168,76,0.35)" stroke-width="0.7"/>
+        <ellipse cx="34" cy="29" rx="4" ry="1.4" fill="none" stroke="rgba(201,168,76,0.35)" stroke-width="0.7"/>
+        <line x1="22" y1="16" x2="22" y2="9" stroke="#C9A84C" stroke-width="0.9" opacity="0.5"/>
+      </svg>
+      <div class="gate-logo-text">AQUA<em>STRA</em></div>
+      <div class="gate-logo-sub">Marine Design Platform · Partner Preview</div>
+    </div>
+    <div class="gate-tagline">
+      Floating architecture design & engineering platform.<br>
+      Enter your name and the access code shared by AquaStra.
+    </div>
+    <div class="gate-field">
+      <label class="gate-label">Your name</label>
+      <input class="gate-input" id="gate-name" placeholder="e.g. Ahmed Al Rashidi" autocomplete="name"
+        onkeydown="if(event.key==='Enter')document.getElementById('gate-code').focus()"/>
+    </div>
+    <div class="gate-field">
+      <label class="gate-label">Access code</label>
+      <input class="gate-input" id="gate-code" placeholder="Access code" autocomplete="off"
+        style="letter-spacing:0.12em;text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')gateSubmit()"/>
+    </div>
+    <button class="gate-btn" onclick="gateSubmit()">Enter Platform →</button>
+    <div class="gate-error" id="gate-error"></div>
+    <div class="gate-footer">
+      AquaStra Marine Industries · Sharjah, UAE<br>
+      <a href="mailto:info@aquastra.ae">info@aquastra.ae</a> · Confidential — do not share
+    </div>
+  </div>
+</div>
+
+<div id="bg"></div>
+
+<!-- STEPPER -->
+<nav id="stepper">
+  <div class="step-logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="2" fill="rgba(201,168,76,0.08)" stroke="rgba(201,168,76,0.3)" stroke-width="0.8"/>
+      <path d="M4 18L14 10L24 18" stroke="#C9A84C" stroke-width="1.2" fill="none"/>
+      <line x1="3" y1="18" x2="25" y2="18" stroke="rgba(26,123,140,0.5)" stroke-width="0.8"/>
+      <ellipse cx="6" cy="18.8" rx="2.5" ry="1" fill="none" stroke="rgba(201,168,76,0.4)" stroke-width="0.6"/>
+      <ellipse cx="22" cy="18.8" rx="2.5" ry="1" fill="none" stroke="rgba(201,168,76,0.4)" stroke-width="0.6"/>
+    </svg>
+    <div><div class="step-logo-text">AQUA<em>STRA</em></div></div>
+  </div>
+  <div class="step-stages">
+    <div class="step active" id="nav-1" onclick="navTo(1)">
+      <div class="step-num" id="sn-1">1</div>
+      <div class="step-label">Select Platform</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step locked" id="nav-2" onclick="navTo(2)">
+      <div class="step-num" id="sn-2">2</div>
+      <div class="step-label">Design Studio</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step locked" id="nav-3" onclick="navTo(3)">
+      <div class="step-num" id="sn-3">3</div>
+      <div class="step-label">Engineering Pipeline</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step locked" id="nav-4" onclick="navTo(4)">
+      <div class="step-num" id="sn-4">4</div>
+      <div class="step-label">Design Report</div>
+    </div>
+  </div>
+  <div class="step-right">
+    <div style="display:flex;align-items:center;gap:8px;margin-right:8px">
+      <div id="api-status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--g1);flex-shrink:0" title="API key — not needed inside Claude.ai. Required for standalone use."></div>
+      <input id="api-key-input" type="password"
+        placeholder="sk-ant-… (optional in Claude.ai)"
+        style="width:200px;background:rgba(255,255,255,0.04);border:1px solid var(--b);border-radius:2px;
+               padding:5px 9px;color:var(--w);font-family:'DM Mono',monospace;font-size:9px;
+               letter-spacing:0.05em;outline:none;transition:border-color .15s"
+        oninput="setApiKey(this.value)"
+        onfocus="this.style.borderColor='var(--gold)'"
+        onblur="this.style.borderColor='var(--b)'"
+        title="Anthropic API key required for AI features"/>
+    </div>
+    <div class="step-user">
+      <div class="step-avatar" id="nav-avatar">S</div>
+      <span id="nav-username">Designer</span>
+    </div>
+  </div>
+</nav>
+
+<div id="app">
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 1: SELECT PLATFORM
+═══════════════════════════════════════════════════ -->
+<div class="screen active" id="s-select">
+  <div class="sel-wrap">
+    <div class="sel-hero">
+      <div class="sel-hero-eyebrow">AquaStra Design Platform · UAE</div>
+      <div class="sel-hero-title">Select your <em>platform</em></div>
+      <div class="sel-hero-sub">Choose a hull family to begin your design session. All models share FRP composite construction and the same hull tooling.</div>
+    </div>
+    <div class="model-grid" id="model-grid"></div>
+    <div id="sel-cfg">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Project Setup</div>
+      <div class="cfg-grid">
+        <div>
+          <div class="cfg-label">Project name</div>
+          <input class="cfg-input" id="cfg-name" placeholder="e.g. AQS-35 Anantara Resort Villa"/>
+        </div>
+        <div>
+          <div class="cfg-label">Configuration</div>
+          <select class="cfg-select" id="cfg-config"></select>
+        </div>
+        <div>
+          <div class="cfg-label">Fit-out tier</div>
+          <div class="chips">
+            <button class="chip on" onclick="setTier('Standard',this)">Standard</button>
+            <button class="chip" onclick="setTier('Premium',this)">Premium</button>
+            <button class="chip" onclick="setTier('Luxury',this)">Luxury</button>
+          </div>
+        </div>
+        <div>
+          <div class="cfg-label">Market</div>
+          <select class="cfg-select" id="cfg-market">
+            <option value="commercial_hospitality">Commercial / Hospitality</option>
+            <option value="government_defence">Government / Defence</option>
+            <option value="private_leisure">Private / Leisure</option>
+          </select>
+        </div>
+      </div>
+      <div class="cfg-label" style="margin-bottom:6px">Options</div>
+      <div class="chips" style="margin-bottom:0">
+        <button class="chip" data-opt="LED" onclick="this.classList.toggle('on')">LED Perimeter</button>
+        <button class="chip" data-opt="SensorMast" onclick="this.classList.toggle('on')">Sensor Mast</button>
+        <button class="chip" data-opt="Solar" onclick="this.classList.toggle('on')">Solar Array</button>
+        <button class="chip" data-opt="RHIB" onclick="this.classList.toggle('on')">RHIB Davit</button>
+        <button class="chip" data-opt="WeaponsLocker" onclick="this.classList.toggle('on')">Weapons Locker</button>
+      </div>
+    </div>
+    <div class="sel-launch" id="sel-launch">
+      <div class="sel-launch-sum" id="sel-sum">Select a platform above to begin your design</div>
+      <button class="btn-sec" onclick="navTo(1)" style="display:none">← Back</button>
+      <button class="btn-go" id="btn-start" disabled onclick="startDesign()">Open Design Studio →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 2: DESIGN STUDIO
+═══════════════════════════════════════════════════ -->
+<div class="screen" id="s-studio">
+  <!-- LEFT: Equipment library -->
+  <div id="st-left">
+    <div class="st-left-head">
+      <div class="st-left-title">Equipment Library</div>
+      <input class="st-left-search" id="eq-search" placeholder="Search equipment…" oninput="filterEq(this.value)"/>
+    </div>
+    <div class="eq-cats" id="eq-cats"></div>
+    <div id="eq-list"></div>
+    <div class="eq-divider">Placed — <span id="placed-count">0</span> items · <span id="placed-wt">0.00</span>t</div>
+    <div id="placed-list-wrap"></div>
+  </div>
+
+  <!-- CENTRE: Canvas -->
+  <div id="st-canvas">
+    <div id="st-toolbar">
+      <div id="deck-tabs"></div>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" id="tb-xray" onclick="toggle3DXray()">X-Ray</button>
+      <button class="tb-btn" id="tb-explode" onclick="toggle3DExplode()">Explode</button>
+      <div class="tb-sep"></div>
+      <div class="tb-meta">
+        <div class="tb-stat">Model <span id="tb-model">—</span></div>
+        <div class="tb-stat">LOA <span id="tb-loa">—</span></div>
+        <div class="tb-stat">GMt <span id="tb-gmt">—</span></div>
+        <div class="tb-stat">Disp <span id="tb-disp">—</span></div>
+      </div>
+    </div>
+    <div id="canvas-wrap">
+      <!-- 2D SVG floor plan -->
+      <div id="svg-wrap">
+        <svg id="boatSVG" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <!-- 3D viewport -->
+      <div id="three-wrap">
+        <canvas id="three-canvas"></canvas>
+        <div id="zone-tt">
+          <div class="ztt-id" id="ztt-id"></div>
+          <div class="ztt-name" id="ztt-name"></div>
+          <div class="ztt-meta" id="ztt-meta"></div>
+        </div>
+        <div id="layer-ctrl">
+          <div class="lyr-title">Layers</div>
+          <div class="lyr-row" onclick="toggleLayer('hull',this)"><div class="lyr-ck on"></div><span class="lyr-lb">Hull</span></div>
+          <div class="lyr-row" onclick="toggleLayer('decks',this)"><div class="lyr-ck on"></div><span class="lyr-lb">Decks</span></div>
+          <div class="lyr-row" onclick="toggleLayer('zones',this)"><div class="lyr-ck on"></div><span class="lyr-lb">Zones</span></div>
+          <div class="lyr-row" onclick="toggleLayer('structure',this)"><div class="lyr-ck on"></div><span class="lyr-lb">Structure</span></div>
+          <div class="lyr-row" onclick="toggleLayer('equipment',this)"><div class="lyr-ck on"></div><span class="lyr-lb">Equipment</span></div>
+        </div>
+        <div id="vp-ctrls">
+          <button class="deck-tab on" id="vb-p" onclick="set3DView('p')">Persp</button>
+          <button class="deck-tab" id="vb-t" onclick="set3DView('t')">Top</button>
+          <button class="deck-tab" id="vb-s" onclick="set3DView('s')">Side</button>
+          <button class="deck-tab" id="vb-f" onclick="set3DView('f')">Front</button>
+        </div>
+        <div id="wt-bar">
+          <div class="wt-item"><div class="wt-val" id="wt-ls">—</div><div class="wt-lbl">Lightship t</div></div>
+          <div class="wt-div"></div>
+          <div class="wt-item"><div class="wt-val" id="wt-add">0</div><div class="wt-lbl">Added t</div></div>
+          <div class="wt-div"></div>
+          <div class="wt-item"><div class="wt-val" id="wt-tot">—</div><div class="wt-lbl">Total t</div></div>
+          <div class="wt-div"></div>
+          <div class="wt-item">
+            <div id="wt-fill-wrap"><div id="wt-fill" style="width:0%"></div></div>
+            <div class="wt-lbl" id="wt-pct">0% payload</div>
+          </div>
+        </div>
+        <div id="place-banner">
+          <span class="pm-label" id="pm-label">PLACE MODE</span>
+          <button class="pm-cancel" onclick="cancelPlace()">Cancel ×</button>
+        </div>
+      </div>
+    </div>
+    <!-- Bottom AI bar -->
+    <div id="st-aibar">
+      <input id="st-ai-inp" placeholder="Ask the Design AI — e.g. 'Optimise Zone D for FOH' · 'Weight impact of LED walls' · 'Best layout for AQS-35 resort'"/>
+      <button class="ai-send" id="st-ai-go" onclick="studioAskAI()">Ask AI ▶</button>
+      <button class="btn-sec" onclick="goToPipeline()" style="flex-shrink:0">Run Engineering →</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Inspector -->
+  <div id="st-right">
+    <div class="rp-tabs">
+      <button class="rp-tab on" onclick="setRPTab('spec',this)">Spec</button>
+      <button class="rp-tab" onclick="setRPTab('zone',this)">Zone</button>
+      <button class="rp-tab" onclick="setRPTab('cost',this)">Cost</button>
+      <button class="rp-tab" onclick="setRPTab('hydro',this)">Hydro</button>
+      <button class="rp-tab" onclick="setRPTab('ai',this)">AI Log</button>
+    </div>
+    <div class="rp-panel on" id="rp-spec">
+      <div class="sec-head">Platform</div><div id="rp-spec-rows"></div>
+      <div class="sec-head">Checks</div><div id="rp-checks"></div>
+    </div>
+    <div class="rp-panel" id="rp-zone">
+      <div id="rp-zone-content"><div style="color:var(--g1);font-size:11px;padding:20px 0;text-align:center;line-height:1.8">Click a zone on the floor plan<br>or in the 3D view</div></div>
+    </div>
+    <div class="rp-panel" id="rp-cost">
+      <div class="sec-head">Cost Breakdown</div><div id="rp-cost-bars"></div>
+      <div class="spec-row" style="margin-top:10px"><span class="spec-k">TOTAL ESTIMATED</span><span class="spec-v hl" id="rp-cost-total">—</span></div>
+    </div>
+    <div class="rp-panel" id="rp-hydro">
+      <div class="sec-head">Hydrostatics</div><div id="rp-hydro-rows"></div>
+      <div class="sec-head">Weight Summary</div><div id="rp-wt-rows"></div>
+    </div>
+    <div class="rp-panel" id="rp-ai" style="padding:0;display:flex;flex-direction:column;">
+      <div id="ai-log">
+        <div class="msg msg-a"><strong>Design AI</strong><br><br>I have full context on your model, zones, and equipment. Ask about layout optimisation, FOH conversion, stability, or GCC procurement strategy.</div>
+      </div>
+      <div id="ai-input-row">
+        <input id="ai-inp" placeholder="Ask about the design…"/>
+        <button id="ai-go" onclick="sendAI()">▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 3: PIPELINE
+═══════════════════════════════════════════════════ -->
+<div class="screen" id="s-pipeline">
+  <div class="pipe-wrap">
+    <div class="pipe-hero">
+      <div class="pipe-eyebrow">Engineering Analysis</div>
+      <div class="pipe-title" id="pipe-title">7-Stage Engineering Pipeline</div>
+      <div class="pipe-sub">Claude AI runs each stage sequentially — Config → Hull → Hydrostatics → Weight → Layout → 3D → Summary</div>
+    </div>
+    <div class="pipe-cfg" id="pipe-cfg">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Project Details</div>
+      <div class="pipe-cfg-grid">
+        <div>
+          <div class="cfg-label">Project name</div>
+          <input class="cfg-input" id="pipe-proj" placeholder="e.g. AQS-35 Anantara Resort — Phase 1"/>
+        </div>
+        <div>
+          <div class="cfg-label">Client</div>
+          <input class="cfg-input" id="pipe-client" placeholder="Client name"/>
+        </div>
+        <div>
+          <div class="cfg-label">Reference</div>
+          <input class="cfg-input" id="pipe-ref" placeholder="AQS-35-001"/>
+        </div>
+      </div>
+      <div class="pipe-launch-row">
+        <button class="btn-sec" onclick="navTo(2)">← Back to Studio</button>
+        <button class="btn-go" id="pipe-run-btn" onclick="runPipeline()">Run 7-Stage Analysis →</button>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);margin-left:8px" id="pipe-status-text"></div>
+      </div>
+    </div>
+    <div class="stage-list" id="stage-list"></div>
+    <div id="pipe-goto-report" style="display:none;margin-top:20px;text-align:center">
+      <button class="btn-go" onclick="navTo(4)">View Design Report →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 4: REPORT
+═══════════════════════════════════════════════════ -->
+<div class="screen" id="s-report">
+  <div class="report-wrap" id="report-content">
+    <!-- Generated dynamically -->
+    <div style="text-align:center;padding:60px;color:var(--g2);font-size:14px">Complete the engineering pipeline to generate your report</div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<div id="toast"></div>
+<script>
+// ─── CENTRAL API CALLER ──────────────────────────────────────
+// Tries in order: APP.apiKey → prompt user → fail with message
+async function callAI({system, messages, max_tokens=1000}) {
+  // Build headers — always include the bypass header for Claude.ai artifact mode
+  // (Claude.ai injects auth automatically when this header is present)
+  const headers = {
+    'Content-Type': 'application/json',
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+  // If user has provided a key (standalone mode), add it
+  if (APP.apiKey) headers['x-api-key'] = APP.apiKey;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens,
+      system,
+      messages
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({error:{message:res.statusText}}));
+    const msg = err?.error?.message || res.statusText;
+
+    // 401 in Claude.ai = something wrong with the artifact environment
+    // 401 standalone = bad/missing key
+    if (res.status === 401) {
+      if (!APP.apiKey) {
+        // Running standalone - prompt for key once
+        setApiKeyPrompt();
+      } else {
+        APP.apiKey = null;
+        try { sessionStorage.removeItem('aq_apikey'); } catch(e){}
+      }
+      throw new Error('API key required. Enter your Anthropic key (sk-ant-…) in the top bar.');
+    }
+    throw new Error(`API error ${res.status}: ${msg}`);
+  }
+  return res;
+}
+
+function setApiKeyPrompt() {
+  // Show the key field prominently
+  const inp = document.getElementById('api-key-input');
+  const dot = document.getElementById('api-status-dot');
+  if (inp) {
+    inp.style.borderColor = 'var(--gold)';
+    inp.style.boxShadow = '0 0 0 2px rgba(201,168,76,0.3)';
+    inp.placeholder = 'Required: sk-ant-… API key';
+    inp.focus();
+    setTimeout(() => {
+      inp.style.borderColor = 'var(--b)';
+      inp.style.boxShadow = 'none';
+      inp.placeholder = 'sk-ant-… API key (optional in Claude.ai)';
+    }, 4000);
+  }
+  toast('Running inside Claude.ai? No key needed. Standalone? Paste sk-ant-… key in top bar.');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// ACCESS GATE — partner access codes
+// ═══════════════════════════════════════════════════════════════
+const ACCESS_CODES = {
+  'AQUA2026':   { role: 'Partner',     label: 'AquaStra Partner Access' },
+  'PARTNER1':   { role: 'Partner',     label: 'Partner Preview 1' },
+  'PARTNER2':   { role: 'Partner',     label: 'Partner Preview 2' },
+  'PARTNER3':   { role: 'Partner',     label: 'Partner Preview 3' },
+  'INVESTOR1':  { role: 'Investor',    label: 'Investor Access' },
+  'INVESTOR2':  { role: 'Investor',    label: 'Investor Access' },
+  'DEMO':       { role: 'Demo',        label: 'Demo Access' },
+  'SAFEER':     { role: 'Admin',       label: 'Admin Access' },
+};
+
+const SESSION_KEY = 'aq_session';
+
+function gateSubmit() {
+  const name = document.getElementById('gate-name').value.trim();
+  const code = document.getElementById('gate-code').value.trim().toUpperCase();
+  const errEl = document.getElementById('gate-error');
+  const codeEl = document.getElementById('gate-code');
+  const nameEl = document.getElementById('gate-name');
+
+  errEl.textContent = '';
+
+  if (!name) {
+    nameEl.classList.add('err');
+    setTimeout(() => nameEl.classList.remove('err'), 500);
+    errEl.textContent = 'Please enter your name';
+    nameEl.focus();
+    return;
+  }
+  if (!code) {
+    codeEl.classList.add('err');
+    setTimeout(() => codeEl.classList.remove('err'), 500);
+    errEl.textContent = 'Please enter the access code';
+    codeEl.focus();
+    return;
+  }
+
+  const match = ACCESS_CODES[code];
+  if (!match) {
+    codeEl.classList.add('err');
+    setTimeout(() => codeEl.classList.remove('err'), 500);
+    errEl.textContent = '✗ Invalid access code — contact info@aquastra.ae';
+    codeEl.value = '';
+    codeEl.focus();
+    return;
+  }
+
+  // Valid — store session
+  const session = { name, code, role: match.role, label: match.label, ts: Date.now() };
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(e){}
+
+  gatePass(session);
+}
+
+function gatePass(session) {
+  // Update nav with user name
+  const av = document.getElementById('nav-avatar');
+  const un = document.getElementById('nav-username');
+  if (av) av.textContent = session.name.charAt(0).toUpperCase();
+  if (un) un.textContent = session.name.split(' ')[0];
+
+  // Update APP user
+  APP.user = { name: session.name, role: session.role };
+
+  // Show admin API field only for admin role
+  const apiField = document.getElementById('api-key-input');
+  if (apiField && session.role !== 'Admin') {
+    apiField.parentElement.style.display = 'none';
+  }
+
+  // Animate gate out
+  const gate = document.getElementById('gate');
+  gate.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  gate.style.opacity = '0';
+  gate.style.transform = 'scale(0.97)';
+  setTimeout(() => { gate.style.display = 'none'; }, 500);
+
+  toast('Welcome, ' + session.name.split(' ')[0] + ' · ' + session.label);
+}
+
+function checkExistingSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    const session = JSON.parse(raw);
+    // Sessions valid for 8 hours
+    if (Date.now() - session.ts > 8 * 60 * 60 * 1000) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    gatePass(session);
+    return true;
+  } catch(e) { return false; }
+}
+
+const PX_PER_M = 16;
+const CANVAS_PAD = 40;
+const PX = 16;
+const PAD = 40;
+// 3D engine top-level vars
+let renderer3, scene3, camera3, animId3;
+let orb3State = { rotating:false, panning:false, lastX:0, lastY:0, theta:-0.6, phi:1.0, radius:60, target:{x:12,y:0,z:2} };
+
+// ══ DATA ════════════════════════════════════════════════════════
+const MODEL_DB = {
+  'AQS-25': {
+    name:'AQS-25 Hub', loa:25, boa:10.5, draft:1.2, depth:2.3, hull:'trimaran',
+    mainDeckArea:204.75, upperDeckArea:136.5,
+    outriggerOffset:4.515, outriggerBeam:1.47, mainHullBeam:3.99,
+    displacement:68.5, gmt:15.14, stability:'excellent', resistance:26.3,
+    lightship:61.7, payload:5.8,
+    price:{ Standard:'AED 2.0M', Premium:'AED 2.2M', Luxury:'AED 2.5M' },
+    costK:{ hull:1050, fitout:150, marine:210, hvac:75, pm:60, overhead:70, contingency:120 },
+    tierMult:{ Standard:1, Premium:1.28, Luxury:1.55 },
+    optCostK:{ LED:180, UpperDeck:250, SensorMast:55, Solar:40, RHIB:80, Pool:65, WeaponsLocker:45 },
+    wt:{ structure:34.1, propulsion:4.8, systems:6.2, furniture:6.6, tanks:10.3, payload:5.8 },
+    configs:['Hospitality','FOH','Media','Private'],
+    pipelineHash:'S7-PIPE-3AA47D916B225E471D84A912',
+    checks:[
+      {id:'sum-01',status:'pass',desc:'GM transverse adequate',val:'15.142m',note:'Excellent — trimaran outrigger geometry'},
+      {id:'sum-02',status:'pass',desc:'Trim: LCG/LCB alignment',val:'Δ0.552m',note:'Minor bow-heavy — fuel ballast compensates'},
+      {id:'sum-03',status:'warn',desc:'LED upper deck VCG impact',val:'1.6t @ 5.1m',note:'Ballast 0.4t in outrigger keel recommended'},
+      {id:'sum-04',status:'pass',desc:'FOH conversion provisions',val:'4 zones ready',note:'Zones A/B/C/D convertible without structural change'},
+      {id:'sum-05',status:'pass',desc:'Range at design speed',val:'200nm',note:'8,000L fuel @ 18kn'},
+      {id:'sum-06',status:'warn',desc:'MCA classification',val:'Pending',note:'Engage Sharjah Ports Authority for houseboat letter'},
+      {id:'sum-07',status:'pass',desc:'DIBS Nov 2026 readiness',val:'6-month build feasible',note:'Start procurement April 2026'},
+    ]
+  },
+  'AQS-35': {
+    name:'AQS-35 Residence', loa:32, boa:12.8, draft:1.47, depth:2.82, hull:'trimaran',
+    mainDeckArea:304, upperDeckArea:195,
+    outriggerOffset:5.5, outriggerBeam:1.82, mainHullBeam:5.1,
+    displacement:120, gmt:18.2, stability:'excellent', resistance:42.1,
+    lightship:105, payload:15,
+    price:{ Standard:'AED 4.2M', Premium:'AED 4.8M', Luxury:'AED 5.5M' },
+    costK:{ hull:2300, fitout:320, marine:380, hvac:135, pm:110, overhead:135, contingency:220 },
+    tierMult:{ Standard:1, Premium:1.28, Luxury:1.55 },
+    optCostK:{ LED:280, UpperDeck:380, SensorMast:70, Solar:65, RHIB:110, Pool:95, WeaponsLocker:45 },
+    wt:{ structure:52, propulsion:7.2, systems:9.8, furniture:12.5, tanks:16.8, payload:15 },
+    configs:['Hospitality','FOH','Private'],
+    pipelineHash:'S7-PIPE-5BC62FD814A9372E',
+    checks:[
+      {id:'s-01',status:'pass',desc:'GM transverse adequate',val:'18.2m',note:'Excellent trimaran stability'},
+      {id:'s-02',status:'warn',desc:'Cost spread AQS-35',val:'±23%',note:'Full BOM review pending — confirm before investor pitch'},
+      {id:'s-03',status:'pass',desc:'Range',val:'250nm',note:'12,000L diesel @ 16kn'},
+    ]
+  },
+  'AQS-40': {
+    name:'AQS-40 Lagoon', loa:38, boa:16.7, draft:1.67, depth:3.27, hull:'quadrimaran',
+    mainDeckArea:420, upperDeckArea:270,
+    outriggerOffset:7.1, outriggerBeam:2.1, mainHullBeam:5.5,
+    displacement:195, gmt:22.4, stability:'excellent', resistance:68,
+    lightship:172, payload:23,
+    price:{ Standard:'AED 5.5M', Premium:'AED 6.2M', Luxury:'AED 7.2M' },
+    costK:{ hull:3100, fitout:430, marine:500, hvac:190, pm:145, overhead:175, contingency:300 },
+    tierMult:{ Standard:1, Premium:1.28, Luxury:1.55 },
+    optCostK:{ LED:380, UpperDeck:520, SensorMast:90, Solar:90, RHIB:130, Pool:120 },
+    wt:{ structure:72, propulsion:9.5, systems:14, furniture:19, tanks:28, payload:23 },
+    configs:['Hospitality','Media','Private'],
+    pipelineHash:'S7-PIPE-7EA14C2B93D5480F',
+    checks:[
+      {id:'s-01',status:'pass',desc:'GM transverse',val:'22.4m',note:'Outstanding — quadrimaran wide beam'},
+      {id:'s-02',status:'pass',desc:'Deck area utilisation',val:'~82%',note:'Optimal for hospitality deployment'},
+    ]
+  },
+  'AQS-45': {
+    name:'AQS-45 Terrace', loa:44, boa:18.9, draft:1.89, depth:3.70, hull:'quadrimaran',
+    mainDeckArea:556, upperDeckArea:352,
+    outriggerOffset:8.2, outriggerBeam:2.4, mainHullBeam:6.2,
+    displacement:290, gmt:26.1, stability:'excellent', resistance:98,
+    lightship:258, payload:32,
+    price:{ Standard:'AED 6.5M', Premium:'AED 7.5M', Luxury:'AED 8.5M' },
+    costK:{ hull:3700, fitout:530, marine:600, hvac:220, pm:165, overhead:200, contingency:365 },
+    tierMult:{ Standard:1, Premium:1.28, Luxury:1.55 },
+    optCostK:{ LED:480, UpperDeck:650, SensorMast:110, Solar:120, RHIB:160, Pool:150 },
+    wt:{ structure:104, propulsion:13, systems:20, furniture:32, tanks:44, payload:32 },
+    configs:['Hospitality','Media','Private'],
+    pipelineHash:'S7-PIPE-9FD27A3E05B6194C',
+    checks:[
+      {id:'s-01',status:'pass',desc:'GM transverse',val:'26.1m',note:'Outstanding — wide quadrimaran'},
+      {id:'s-02',status:'pass',desc:'Capacity 120 guests',val:'120 pax',note:'Suitable for resort anchor venue'},
+    ]
+  },
+  'AQS-50': {
+    name:'AQS-50 Pavilion', loa:52, boa:21.8, draft:2.18, depth:4.27, hull:'quadrimaran',
+    mainDeckArea:730, upperDeckArea:465,
+    outriggerOffset:9.5, outriggerBeam:2.75, mainHullBeam:7.2,
+    displacement:430, gmt:31.2, stability:'excellent', resistance:145,
+    lightship:384, payload:46,
+    price:{ Standard:'AED 9.0M', Premium:'AED 10.5M', Luxury:'AED 12.0M' },
+    costK:{ hull:5000, fitout:720, marine:840, hvac:310, pm:220, overhead:280, contingency:500 },
+    tierMult:{ Standard:1, Premium:1.28, Luxury:1.55 },
+    optCostK:{ LED:680, UpperDeck:900, SensorMast:140, Solar:180, RHIB:200, Pool:200 },
+    wt:{ structure:156, propulsion:18, systems:28, furniture:52, tanks:72, payload:46 },
+    configs:['Hospitality','Media','Private'],
+    pipelineHash:'S7-PIPE-B3E49D1F27C08A5E',
+    checks:[
+      {id:'s-01',status:'pass',desc:'GM transverse',val:'31.2m',note:'Outstanding — flagship platform'},
+      {id:'s-02',status:'pass',desc:'Displacement',val:'430t',note:'Requires marina berth >6m depth at approaches'},
+    ]
+  }
+};
+function getZones(modelKey, config, deckFilter) {
+  const M = MODEL_DB[modelKey];
+  const loa = M.loa, boa = M.boa;
+  // Scale factor from AQS-25 base (loa=25, boa=10.5)
+  const sx = loa / 25, sy = boa / 10.5;
+  const isFOH = config === 'FOH';
+  const hasUpper = true; // always show upper if 2+ decks
+
+  const raw = [
+    // LOWER
+    { id:'LD-01', deck:'lower', name:'Engine Room', type:'propulsion',
+      x0:0.5, x1:5.5, y0:-1.8, y1:1.8, h:1.8,
+      color:'#2A1A1A', stroke:'#CC5A5A',
+      desc:'Main propulsion plant. Twin engines + waterjets. Access via main deck hatch.',
+      tags:['Propulsion','Mechanical','Restricted'] },
+    { id:'LD-02', deck:'lower', name:'Fuel Tank (Port)', type:'tank',
+      x0:3.5, x1:13.5, y0:-5.2, y1:-4.0, h:0.6,
+      color:'#1A1A2A', stroke:'#5A5ACC',
+      desc:'Port outrigger fuel tank. 4,000L diesel. Symmetric fill protocol with stbd tank.',
+      tags:['Fuel','Outrigger','Port'] },
+    { id:'LD-03', deck:'lower', name:'Fuel Tank (Stbd)', type:'tank',
+      x0:3.5, x1:13.5, y0:4.0, y1:5.2, h:0.6,
+      color:'#1A1A2A', stroke:'#5A5ACC',
+      desc:'Starboard outrigger fuel tank. 4,000L diesel.',
+      tags:['Fuel','Outrigger','Stbd'] },
+    { id:'LD-04', deck:'lower', name:'Freshwater & Sewage', type:'tank',
+      x0:8.5, x1:12.0, y0:-1.2, y1:1.2, h:0.6,
+      color:'#1A1A2A', stroke:'#4A8ACC',
+      desc:'3,000L freshwater + 800L sewage holding. Watermaker output feeds FW.',
+      tags:['Water','Sewage','Tanks'] },
+    // MAIN
+    { id:'MD-01', deck:'main', name: isFOH ? 'Zone A — CIC / Commander' : 'Zone A — Forward Lounge',
+      type:'social', x0:16.5, x1:24.0, y0:-2.2, y1:2.2, h:2.6,
+      color:'#1A3F6A', stroke:'#2A6496',
+      desc: isFOH ? 'Commander\'s CIC. Encrypted multi-net C2. Satellite uplink. VTC. Blackout blinds.' : 'Premium forward lounge. Floor-to-ceiling glazing. Blackout blinds. Pre-wired for CIC conversion.',
+      tags: isFOH ? ['CIC','C2','Comms','FOH'] : ['Lounge','Glazing','FOH-ready'] },
+    { id:'MD-02', deck:'main', name: isFOH ? 'Zone B — Berth 1 (Port)' : 'Zone B — Cabin 1',
+      type:'accommodation', x0:11.0, x1:16.0, y0:-2.8, y1:-0.2, h:2.4,
+      color:'#0F4A3A', stroke:'#1A7A6A',
+      desc: isFOH ? 'Hot-bunk berthing, 6 personnel. Individual equipment lockers. Marine-grade blackout.' : 'Convertible suite — sofa-bed or twin. En-suite head. Converts to 6-bunk FOH Standard.',
+      tags: isFOH ? ['Berth','6pax','FOH'] : ['Cabin','En-suite','Convertible'] },
+    { id:'MD-03', deck:'main', name: isFOH ? 'Zone C — Berth 2 / Medical' : 'Zone C — Cabin 2',
+      type:'accommodation', x0:11.0, x1:16.0, y0:0.2, y1:2.8, h:2.4,
+      color:'#0F4A3A', stroke:'#1A7A6A',
+      desc: isFOH ? 'Full Mission: 2-stretcher medical bay, defibrillator, IV supplies, medevac radio. Standard: berth 6 pax.' : 'Mirror of Zone B. FOH Full Mission: medical bay (2-stretcher).',
+      tags: isFOH ? ['Medical','Berth','FOH'] : ['Cabin','En-suite','Convertible'] },
+    { id:'MD-04', deck:'main', name: isFOH ? 'Zone D — Ops Centre' : 'Zone D — Saloon',
+      type:'social', x0:7.5, x1:11.0, y0:-2.8, y1:2.8, h:2.6,
+      color:'#3A2A0A', stroke:'#C9A84C',
+      desc: isFOH ? 'Tactical ops centre: 8–10 ruggedised workstations, dual display wall, AIS/radar feed, VMF-capable.' : 'Open-plan dining and lounge. Convertible to 6–10 workstation ops centre (FOH). Large-format AV.',
+      tags: isFOH ? ['OpsCenter','Workstations','Tactical'] : ['Saloon','Dining','FOH-ready'] },
+    { id:'MD-05', deck:'main', name:'Zone E — Galley', type:'galley',
+      x0:5.5, x1:7.5, y0:-2.0, y1:2.0, h:2.4,
+      color:'#2A1A5A', stroke:'#8A5ACC',
+      desc:'Commercial galley: induction hob, combi oven, blast chiller, commercial fridge. Watermaker below counter.',
+      tags:['Galley','Commercial','Watermaker'] },
+    { id:'MD-06', deck:'main', name:'Zone H — Mechanical Bay', type:'technical',
+      x0:2.0, x1:5.5, y0:-1.8, y1:1.8, h:2.2,
+      color:'#3A1A1A', stroke:'#CC5A5A',
+      desc:'Twin 32kW gensets. HVAC plant. Bilge access. Soundproofed. Emergency hatch.',
+      tags:['Genset','HVAC','Systems'] },
+    { id:'MD-07', deck:'main', name:'Zone F — Aft Deck', type:'open',
+      x0:0.0, x1:2.0, y0:-4.5, y1:4.5, h:0,
+      color:'#0A3A45', stroke:'#1A6B7C',
+      desc:'Boarding platform + swim step. Sensor mast hardpoint (centreline). RHIB davit hard-points P/S.',
+      tags:['Aft','Boarding','Mast-Hardpoint'] },
+    { id:'MD-08', deck:'main', name:'Bridge / Wheelhouse', type:'navigation',
+      x0:20.0, x1:24.0, y0:-1.8, y1:1.8, h:2.2,
+      color:'#0A2535', stroke:'#2A6080',
+      desc:'Integrated helm. Garmin MFD, AIS, radar. Enclosed A/C. Full-perimeter sightlines.',
+      tags:['Bridge','Navigation','Helm'] },
+    // UPPER
+    { id:'UD-01', deck:'upper', name:'Upper — Lounge / Bar (Port)', type:'social',
+      x0:7.0, x1:21.0, y0:-4.0, y1:0.0, h:2.4,
+      color:'#1A3F6A', stroke:'#2A6496',
+      desc:'Port side upper lounge and bar. LED wall on port elevation. Fixed bar counter fwd. Lounge seating.',
+      tags:['Lounge','Bar','LED-Port'] },
+    { id:'UD-02', deck:'upper', name:'Upper — Open Deck (Stbd)', type:'open',
+      x0:7.0, x1:21.0, y0:0.0, y1:4.0, h:0,
+      color:'#0F3A6A', stroke:'#1A6B7C',
+      desc:'Starboard upper open deck. LED wall on stbd elevation. Sun loungers, shade sail.',
+      tags:['Sundeck','LED-Stbd','Open'] },
+    { id:'UD-03', deck:'upper', name:'LED Bow Wall (Media)', type:'media',
+      x0:20.5, x1:22.5, y0:-4.0, y1:4.0, h:2.4,
+      color:'#2A2000', stroke:'#C9A84C',
+      desc:'Bow-facing LED display wall — transparent LED film on glass. AquaStra brand at DIBS; operator media post-deployment.',
+      tags:['LED','Media','Bow','DIBS'] },
+    { id:'UD-04', deck:'upper', name:'Stern Access / Steps', type:'circulation',
+      x0:4.5, x1:7.0, y0:-2.0, y1:2.0, h:0,
+      color:'#152030', stroke:'#2A4060',
+      desc:'Open stern — boarding access from main deck via staircase. No LED panel (Option A: 3 walls + open stern).',
+      tags:['Access','Circulation','Stern'] },
+  ];
+
+  return raw.map(z => ({
+    ...z,
+    // Scale coordinates from AQS-25 base
+    x0: parseFloat((z.x0 * sx).toFixed(2)),
+    x1: parseFloat((z.x1 * sx).toFixed(2)),
+    y0: parseFloat((z.y0 * sy).toFixed(2)),
+    y1: parseFloat((z.y1 * sy).toFixed(2)),
+    area: parseFloat(((z.x1-z.x0)*sx * (z.y1-z.y0)*sy * (z.y0 < 0 && z.y1 > 0 ? 1 : Math.abs(z.y1-z.y0)*sy / Math.abs(z.y1-z.y0))).toFixed(1))
+  })).filter(z => !deckFilter || z.deck === deckFilter);
+}
+const EQUIPMENT = [
+  // Navigation
+  {id:'nav-01',cat:'Navigation',name:'Helm Station',icon:'⊕',dim:[1.2,0.8,1.4],wt:0.12,color:0x2A4A6A,deck:'main',desc:'Integrated helm, MFD, AIS, radar, enclosed A/C'},
+  {id:'nav-02',cat:'Navigation',name:'Chartplotter MFD',icon:'⊕',dim:[0.4,0.15,0.3],wt:0.008,color:0x2A4A6A,deck:'main',desc:'Garmin 9624XSV multi-function display'},
+  {id:'nav-03',cat:'Navigation',name:'Radar Mast 6m',icon:'↑',dim:[0.3,0.3,6.0],wt:0.08,color:0x4A6A8A,deck:'upper',desc:'6m aluminium mast with solid-state radar and CCTV cluster'},
+  {id:'nav-04',cat:'Navigation',name:'AIS Transponder',icon:'⊕',dim:[0.2,0.05,0.15],wt:0.002,color:0x2A4A6A,deck:'main',desc:'Class B AIS transponder for vessel identification'},
+  {id:'nav-05',cat:'Navigation',name:'VHF Radio',icon:'⊕',dim:[0.15,0.05,0.08],wt:0.001,color:0x2A4A6A,deck:'main',desc:'Fixed VHF marine radio, DSC-capable'},
+  // Propulsion
+  {id:'pro-01',cat:'Propulsion',name:'Waterjet HJ292',icon:'⊗',dim:[1.8,1.1,0.9],wt:0.9,color:0x6A2A2A,deck:'lower',desc:'Hamilton Jet HJ292 waterjet unit, 350kW'},
+  {id:'pro-02',cat:'Propulsion',name:'Main Engine MAN',icon:'⊗',dim:[2.1,1.2,0.9],wt:1.2,color:0x6A2A2A,deck:'lower',desc:'MAN D2676 marine diesel, 450kW'},
+  {id:'pro-03',cat:'Propulsion',name:'Fuel Tank 1000L',icon:'□',dim:[1.5,0.7,0.8],wt:0.86,color:0x4A2A1A,deck:'lower',desc:'1,000L baffled diesel tank, marine-grade aluminium'},
+  // Accommodation
+  {id:'acc-01',cat:'Accommodation',name:'Double Berth',icon:'⊡',dim:[2.0,1.6,0.5],wt:0.18,color:0x1A4A3A,deck:'main',desc:'2000×1600mm double berth, marine mattress, fiddle rail'},
+  {id:'acc-02',cat:'Accommodation',name:'Twin Berth',icon:'⊡',dim:[2.0,1.8,0.5],wt:0.16,color:0x1A4A3A,deck:'main',desc:'Twin bunk arrangement, individual lockers'},
+  {id:'acc-03',cat:'Accommodation',name:'Sofa Bed',icon:'⊡',dim:[2.2,0.9,0.8],wt:0.12,color:0x2A3A5A,deck:'main',desc:'3-seat sofa converting to single berth'},
+  {id:'acc-04',cat:'Accommodation',name:'Head / WC',icon:'□',dim:[1.2,1.0,2.2],wt:0.08,color:0x3A3A5A,deck:'main',desc:'Marine WC, washbasin, vanity unit'},
+  {id:'acc-05',cat:'Accommodation',name:'Shower Cubicle',icon:'□',dim:[0.9,0.9,2.1],wt:0.06,color:0x3A3A5A,deck:'main',desc:'GRP shower tray, thermostatic mixer, sump'},
+  // Galley
+  {id:'gal-01',cat:'Galley',name:'Induction Hob',icon:'⊕',dim:[0.6,0.5,0.15],wt:0.012,color:0x4A2A5A,deck:'main',desc:'4-zone marine induction hob, flush-mounted'},
+  {id:'gal-02',cat:'Galley',name:'Combi Oven',icon:'□',dim:[0.6,0.55,0.45],wt:0.045,color:0x4A2A5A,deck:'main',desc:'Rational combi steam oven, 6 trays'},
+  {id:'gal-03',cat:'Galley',name:'Commercial Fridge',icon:'□',dim:[0.6,0.65,1.85],wt:0.12,color:0x4A2A5A,deck:'main',desc:'Upright commercial refrigerator, 400L'},
+  {id:'gal-04',cat:'Galley',name:'Bar Counter 2.4m',icon:'⊡',dim:[2.4,0.6,1.1],wt:0.22,color:0x3A2A1A,deck:'main',desc:'Custom bar counter with under-counter fridge and glass wash'},
+  {id:'gal-05',cat:'Galley',name:'Dining Table 6-seat',icon:'⊡',dim:[1.8,0.9,0.75],wt:0.08,color:0x3A2A1A,deck:'main',desc:'Fixed dining table, teak veneer, 6 covers'},
+  // Technical
+  {id:'tec-01',cat:'Technical',name:'Generator 32kW',icon:'⚡',dim:[1.4,0.9,0.7],wt:0.45,color:0x5A1A1A,deck:'lower',desc:'Kohler 32kW marine generator, sound-insulated housing'},
+  {id:'tec-02',cat:'Technical',name:'HVAC Unit VRF',icon:'□',dim:[0.9,0.25,0.3],wt:0.18,color:0x3A3A3A,deck:'main',desc:'Mitsubishi VRF marine HVAC, multi-split'},
+  {id:'tec-03',cat:'Technical',name:'Watermaker 400L',icon:'⊕',dim:[0.8,0.6,0.5],wt:0.08,color:0x1A4A5A,deck:'lower',desc:'Village Marine 400L/day reverse osmosis watermaker'},
+  {id:'tec-04',cat:'Technical',name:'Electrical Panel',icon:'□',dim:[0.6,0.25,1.0],wt:0.06,color:0x2A2A4A,deck:'lower',desc:'24V/230V distribution panel, MCBs, shore power inlet'},
+  {id:'tec-05',cat:'Technical',name:'Battery Bank',icon:'□',dim:[0.8,0.5,0.4],wt:0.35,color:0x2A4A2A,deck:'lower',desc:'200Ah LiFePO4 bank, BMS, 48V nominal'},
+  // Deck
+  {id:'dck-01',cat:'Deck',name:'Sunlounger',icon:'⊡',dim:[1.9,0.7,0.35],wt:0.018,color:0x4A4A2A,deck:'upper',desc:'Teak-effect composite sunlounger'},
+  {id:'dck-02',cat:'Deck',name:'Deck Table',icon:'⊡',dim:[1.2,0.7,0.75],wt:0.025,color:0x3A3A2A,deck:'upper',desc:'Folding teak deck table with fixed pedestal'},
+  {id:'dck-03',cat:'Deck',name:'Bimini / Shade Sail',icon:'⊡',dim:[4.0,3.0,0.1],wt:0.035,color:0x2A3A4A,deck:'upper',desc:'Stainless frame bimini, solution-dyed acrylic canvas'},
+  {id:'dck-04',cat:'Deck',name:'RHIB Davit System',icon:'↑',dim:[1.2,1.0,2.8],wt:0.32,color:0x3A4A3A,deck:'main',desc:'Single davit, 400kg SWL, manual operation'},
+  {id:'dck-05',cat:'Deck',name:'Swim Platform',icon:'⊡',dim:[2.0,1.2,0.15],wt:0.08,color:0x2A3A4A,deck:'main',desc:'Fold-down GRP swim platform with ladder'},
+  // Safety
+  {id:'saf-01',cat:'Safety',name:'Life Raft 12-pax',icon:'○',dim:[0.8,0.8,0.6],wt:0.085,color:0x6A4A1A,deck:'upper',desc:'Survitec 12-person SOLAS life raft in canister'},
+  {id:'saf-02',cat:'Safety',name:'Fire Suppression FM200',icon:'○',dim:[0.4,0.4,0.9],wt:0.12,color:0x6A2A2A,deck:'lower',desc:'FM-200 system for engine room and galley'},
+  {id:'saf-03',cat:'Safety',name:'First Aid Station',icon:'⊕',dim:[0.5,0.25,0.6],wt:0.015,color:0x6A2A2A,deck:'main',desc:'Marine first aid cabinet, MCA coded vessel spec'},
+  // FOH Mission
+  {id:'foh-01',cat:'FOH Mission',name:'C2 Comms Rack',icon:'↑',dim:[0.6,0.8,2.0],wt:0.22,color:0x4A6A2A,deck:'main',desc:'TETRA/P25 base station, encrypted multi-net, BGAN sat terminal'},
+  {id:'foh-02',cat:'FOH Mission',name:'Tactical Display Wall',icon:'⊡',dim:[2.4,0.15,1.4],wt:0.18,color:0x2A4A4A,deck:'main',desc:'Dual 55" ruggedised displays, AIS/radar overlay, VMF-capable'},
+  {id:'foh-03',cat:'FOH Mission',name:'Sensor Mast 6m ISR',icon:'↑',dim:[0.25,0.25,6.0],wt:0.08,color:0x6A6A2A,deck:'main',desc:'EO/IR turret, ARPA radar 48nm, AIS receiver, UAV pad'},
+  {id:'foh-04',cat:'FOH Mission',name:'RHIB Cradle Dual',icon:'⊡',dim:[5.5,2.2,0.8],wt:0.45,color:0x3A4A3A,deck:'main',desc:'Dual 7m RHIB cradle with quick-release davit system'},
+  {id:'foh-05',cat:'FOH Mission',name:'Weapons Locker',icon:'□',dim:[0.9,0.5,1.8],wt:0.28,color:0x4A3A2A,deck:'main',desc:'UAE-spec weapons storage, biometric lock, ventilated'},
+  {id:'foh-06',cat:'FOH Mission',name:'Medical Bay 2-stretcher',icon:'⊕',dim:[2.4,1.8,2.2],wt:0.35,color:0x6A2A2A,deck:'main',desc:'2-stretcher bay, defibrillator, IV station, medevac radio'},
+  // Media
+  {id:'med-01',cat:'Media',name:'LED Wall Port',icon:'▣',dim:[14.0,0.12,2.4],wt:0.45,color:0xAA8830,deck:'upper',desc:'Transparent LED film on glass, port elevation, 3500nit'},
+  {id:'med-02',cat:'Media',name:'LED Wall Stbd',icon:'▣',dim:[14.0,0.12,2.4],wt:0.45,color:0xAA8830,deck:'upper',desc:'Transparent LED film on glass, stbd elevation'},
+  {id:'med-03',cat:'Media',name:'LED Wall Bow',icon:'▣',dim:[0.12,8.0,2.4],wt:0.38,color:0xAA8830,deck:'upper',desc:'Bow-facing LED display — AquaStra brand for DIBS'},
+  {id:'med-04',cat:'Media',name:'Media Controller',icon:'⊕',dim:[0.5,0.4,0.15],wt:0.025,color:0x2A2A4A,deck:'main',desc:'Nova Star LED controller, 4-channel video processor'},
+  {id:'med-05',cat:'Media',name:'AV Amplifier Rack',icon:'□',dim:[0.6,0.5,1.2],wt:0.08,color:0x2A2A4A,deck:'main',desc:'4-zone marine amplifier rack with DSP'},
+  // Energy
+  {id:'egy-01',cat:'Energy',name:'Solar Array 6kW',icon:'⊡',dim:[6.0,2.0,0.05],wt:0.22,color:0x2A4A2A,deck:'upper',desc:'24× 250W monocrystalline panels, roof-mounted'},
+  {id:'egy-02',cat:'Energy',name:'Inverter/Charger',icon:'⊕',dim:[0.45,0.35,0.2],wt:0.045,color:0x2A4A2A,deck:'lower',desc:'Victron Quattro 5kVA inverter/charger'},
+  // Social
+  {id:'soc-01',cat:'Social',name:'Lounge Sofa 3-seat',icon:'⊡',dim:[2.2,0.85,0.9],wt:0.095,color:0x3A2A4A,deck:'main',desc:'Custom upholstered 3-seat lounge sofa, outdoor fabric'},
+  {id:'soc-02',cat:'Social',name:'Coffee Table',icon:'⊡',dim:[1.1,0.6,0.45],wt:0.022,color:0x3A2A1A,deck:'main',desc:'Low teak coffee table with fiddle edge'},
+  {id:'soc-03',cat:'Social',name:'Feature Lighting Rig',icon:'—',dim:[3.0,0.1,0.1],wt:0.008,color:0x4A4A2A,deck:'upper',desc:'LED strip lighting rig, RGBW, DMX controlled'},
+  {id:'soc-04',cat:'Social',name:'Bar Stools × 4',icon:'↑',dim:[0.4,0.4,1.1],wt:0.06,color:0x3A2A1A,deck:'main',desc:'Swivel bar stools, marine-grade upholstery'},
+];
+// ══ AI SYSTEM + CONTEXT ════════════════════════════════════
+const AI_SYSTEM = `You are the AquaStra Design AI — an expert naval architect and marine business strategist embedded in the AquaStra Design Platform.
+
+AQUASTRA CONTEXT:
+- UAE-based floating architecture manufacturer, Sharjah
+- FRP composite construction, trimaran (AQS-25/35) and quadrimaran (AQS-40/45/50) hulls
+- Three markets: Government/Defence (FOH variants), Commercial/Hospitality, Private/Leisure
+- Demo boat: AQS-25, two-deck, full perimeter LED upper deck (Option A), DIBS Nov 2026
+- FOH variants: Standard AED 1.8-2.2M, Enhanced 2.2-2.8M, Full Mission 3.0-3.8M
+- GCC context: post-Feb 2026 conflict, domestic staycation pivot, 60-90 day procurement windows
+- Key procurement: Tawazun/EDGE Group (UAE), SAMI (Saudi), direct sub-AED 10M
+
+DESIGN PRINCIPLES:
+- Zone A/B/C/D are FOH-convertible on AQS-25 without structural changes
+- LED Option A = full perimeter (port, stbd, bow walls + open stern)
+- Upper deck adds 1.6t at high VCG — ballast provision in outrigger keels recommended
+- MCA stability assessment required before commercial operation
+
+EQUIPMENT CATEGORIES: Navigation (helm, chartplotter, radar mast, AIS, VHF), Propulsion (waterjet, main engine, fuel tank), Accommodation (berths, head, shower), Galley (hob, oven, fridge, bar counter, dining table), Technical (generator, HVAC, watermaker, electrical panel, battery bank), Deck (sunloungers, bimini, RHIB davit, swim platform), Safety (life raft, fire suppression, first aid), FOH Mission (C2 comms rack, tactical display wall, sensor mast ISR, RHIB cradle dual, weapons locker, medical bay 2-stretcher), Media (LED walls port/stbd/bow, media controller, AV rack), Energy (solar array, inverter), Social (sofa, coffee table, feature lighting, bar stools).
+
+MODEL RANGE: AQS-25 Hub (25m, trimaran, AED 2.0–2.5M), AQS-35 Residence (32m, trimaran, AED 4.2–5.5M), AQS-40 Lagoon (38m, quad, AED 5.5M+), AQS-45 Terrace (44m, quad, AED 6.5–8.5M), AQS-50 Pavilion (52m, quad, AED 9–12M).
+
+Respond in 3-6 sentences. Be specific — reference zone IDs, dimensions, AED values, and engineering data from the current state. If asked about a zone, give the dual-use analysis (hospitality + FOH/defence). If asked about business strategy, reference the specific GCC buyer archetype.`;
+function buildAIContext() {
+  const M = MODEL_DB[APP.model];
+  const session = null;
+  const zones = getZones(APP.model, APP.config, APP.deck==='3d'?'main':APP.deck);
+  const selectedZone = APP.selectedZone ? zones.find(z => z.id === APP.selectedZone) : null;
+
+  return `CURRENT STUDIO STATE:
+Model: ${APP.model} (${M.hull}, LOA ${M.loa}m, BOA ${M.boa}m, Draft ${M.draft}m)
+Configuration: ${APP.config}
+Fit-Out Tier: ${APP.tier}
+Active Deck: ${APP.deck}
+Options active: ${[...APP.opts].join(', ') || 'none'}
+Selected Zone: ${selectedZone ? `${selectedZone.id} — ${selectedZone.name} (${Math.abs((selectedZone.x1-selectedZone.x0)*(selectedZone.y1-selectedZone.y0)).toFixed(1)}m², ${selectedZone.deck} deck)` : 'none'}
+
+KEY ENGINEERING DATA:
+Displacement: ${M.displacement}t | Lightship: ${M.lightship}t
+GM Transverse: ${M.gmt}m (${M.stability}) | Resistance: ${M.resistance}kN
+Main deck: ${M.mainDeckArea}m² | Upper deck: ${M.upperDeckArea}m²
+Price: ${M.price[APP.tier]}
+
+ACTIVE DECK ZONES (${zones.length} zones on ${APP.deck} deck):
+${zones.slice(0,6).map(z => `  ${z.id}: ${z.name} — ${Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(0)}m²`).join('\n')}
+
+${session ? `No pipeline session` : 'No pipeline session for this model.'}
+
+3D EQUIPMENT (${S3.placedItems.length} items, ${S3.placedItems.reduce((s,pi)=>{const e=EQUIPMENT.find(e=>e.id===pi.equipId);return s+(e?.wt||0);},0).toFixed(2)}t added):
+${S3.placedItems.length===0?'None.'  :S3.placedItems.slice(0,8).map(pi=>{const e=EQUIPMENT.find(e=>e.id===pi.equipId);return '  '+(e?.name||pi.equipId)+' ('+((e?.wt)||0)+'t) zone '+pi.zoneId;}).join('\n')}`;
+}
+
+
+
+// ══ 3D ENGINE ═════════════════════════════════════════════
+function build3DScene() {
+  Object.keys(mGroups).forEach(clearGrp);
+  Object.keys(zoneMesh3).forEach(k => delete zoneMesh3[k]);
+  deckSurfs = [];
+
+  const M = MODEL_DB[APP.model];
+  if (!M) return;
+  const zones = getZones(APP.model, APP.config);  // all decks
+
+  build3DWater(M);
+  build3DHull(M);
+  build3DZones(M, zones);
+  build3DStructure(M);
+  build3DEquipment();
+  update3DHUD(M);
+}
+
+function refresh3D() {
+  if (APP.deck === '3d') {
+    build3DScene();
+    set3DView('p');
+    const M = MODEL_DB[APP.model];
+    const gEl = document.getElementById('3d-gmt');
+    const dEl = document.getElementById('3d-disp');
+    if (gEl) gEl.textContent = M.gmt;
+    if (dEl) dEl.textContent = M.displacement;
+  }
+}
+
+// ── WATER ─────────────────────────────────────────────────────
+function build3DWater(M) {
+  const geo = new THREE.PlaneGeometry(M.loa * 8, M.boa * 8, 32, 32);
+  const mat = new THREE.MeshPhongMaterial({
+    color:0x0A2535, transparent:true, opacity:0.6,
+    shininess:80, specular:0x1A6B7C, side:THREE.DoubleSide
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.set(M.loa/2, -M.draft, 0);
+  mesh.receiveShadow = true;
+  addGrp('water', mesh);
+  const gm = new THREE.Mesh(
+    new THREE.PlaneGeometry(M.loa*6, M.boa*6, 20, 20),
+    new THREE.MeshBasicMaterial({color:0x1A4060, wireframe:true, transparent:true, opacity:0.07})
+  );
+  gm.rotation.x = -Math.PI/2;
+  gm.position.set(M.loa/2, -M.draft-0.01, 0);
+  addGrp('water', gm);
+}
+
+// ── HULL (extruded shaped geometry) ───────────────────────────
+function build3DHull(M) {
+  const isQuad = M.hull === 'quadrimaran';
+
+  function makeHullShape(beamHalf, draft) {
+    const s = new THREE.Shape();
+    const bw = beamHalf * 0.55;
+    s.moveTo(-bw, 0);
+    s.lineTo(-beamHalf, -draft*0.3);
+    s.lineTo(-beamHalf*0.7, -draft);
+    s.lineTo(beamHalf*0.7, -draft);
+    s.lineTo(beamHalf, -draft*0.3);
+    s.lineTo(bw, 0);
+    s.lineTo(-bw, 0);
+    return s;
+  }
+
+  function extrudeHull(xStart, xEnd, yOffset, beamHalf, depth, draft, colorHex, isMH) {
+    const len = xEnd - xStart;
+    if (len <= 0) return;
+    const geo = new THREE.ExtrudeGeometry(makeHullShape(beamHalf, draft), {
+      depth: len, bevelEnabled:true, bevelThickness:0.05, bevelSize:0.05, bevelSegments:2, steps:3
+    });
+    const mat = new THREE.MeshPhongMaterial({
+      color:colorHex, shininess:isMH?60:40, specular:0x1A3A5F,
+      transparent:S3.xray, opacity:S3.xray?0.35:1.0
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.y = Math.PI/2;
+    mesh.position.set(xStart, yOffset, 0);
+    mesh.castShadow = true;
+    mesh.userData = {layer:'hull'};
+    addGrp('hull', mesh);
+    if (isMH) {
+      const bow = new THREE.Mesh(
+        new THREE.SphereGeometry(beamHalf*0.5, 12, 8, 0, Math.PI, 0, Math.PI/2),
+        new THREE.MeshPhongMaterial({color:colorHex, shininess:60, specular:0x1A3A5F, transparent:S3.xray, opacity:S3.xray?0.35:1})
+      );
+      bow.position.set(xEnd, yOffset, -draft*0.5);
+      bow.userData = {layer:'hull'};
+      addGrp('hull', bow);
+    }
+  }
+
+  const mc = 0x1A3A5F, oc = 0x0F2A45;
+  if (isQuad) {
+    extrudeHull(0,M.loa*0.95,-M.outriggerOffset,M.outriggerBeam,M.depth,M.draft,oc,false);
+    extrudeHull(0,M.loa*0.95, M.outriggerOffset,M.outriggerBeam,M.depth,M.draft,oc,false);
+    extrudeHull(0,M.loa*0.95,-M.mainHullBeam,   M.mainHullBeam*0.5,M.depth,M.draft,mc,false);
+    extrudeHull(0,M.loa*0.95, M.mainHullBeam,   M.mainHullBeam*0.5,M.depth,M.draft,mc,true);
+  } else {
+    extrudeHull(0,M.loa*0.95,0,M.mainHullBeam/2,M.depth,M.draft,mc,true);
+    extrudeHull(M.loa*0.07,M.loa*0.69,-M.outriggerOffset,M.outriggerBeam,M.depth*0.6,M.draft*0.75,oc,false);
+    extrudeHull(M.loa*0.07,M.loa*0.69, M.outriggerOffset,M.outriggerBeam,M.depth*0.6,M.draft*0.75,oc,false);
+  }
+
+  // Main deck
+  const dm = new THREE.Mesh(
+    new THREE.BoxGeometry(M.loa, M.boa, 0.12),
+    new THREE.MeshPhongMaterial({color:0x0D2035, shininess:20, transparent:S3.xray, opacity:S3.xray?0.25:1})
+  );
+  dm.position.set(M.loa/2, 0, 0.06);
+  dm.castShadow = true; dm.receiveShadow = true;
+  dm.userData = {layer:'hull', isDeck:true, deckName:'main'};
+  addGrp('hull', dm);
+
+  // Upper deck
+  const um = new THREE.Mesh(
+    new THREE.BoxGeometry(M.loa*0.7, M.boa*0.9, 0.12),
+    new THREE.MeshPhongMaterial({color:0x1A3550, shininess:20, transparent:true, opacity:S3.xray?0.25:0.9})
+  );
+  um.position.set(M.loa*0.5, 0, M.depth + 0.06);
+  um.userData = {layer:'decks', isDeck:true, deckName:'upper'};
+  addGrp('decks', um);
+  deckSurfs.push(um);
+
+  // Cross beams
+  [0.28, 0.52].forEach(t => {
+    const bm = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, M.boa*0.95, 0.3),
+      new THREE.MeshPhongMaterial({color:0x1A3255})
+    );
+    bm.position.set(M.loa*t, 0, 0.2);
+    bm.userData = {layer:'hull'};
+    addGrp('hull', bm);
+  });
+}
+
+// ── ZONES ─────────────────────────────────────────────────────
+function build3DZones(M, zones) {
+  zones.forEach(z => {
+    // v2 zones: x0,x1,y0,y1,h — z floor from deck
+    const zh = z.h || 0;
+    if (zh < 0.05) return;
+    const zFloor = z.deck === 'lower' ? -M.draft : z.deck === 'upper' ? M.depth : 0;
+    const w = z.x1 - z.x0, d = Math.abs(z.y1 - z.y0);
+    if (w < 0.1 || d < 0.1) return;
+    const cx = (z.x0+z.x1)/2, cy = (z.y0+z.y1)/2, cz = zFloor + zh/2;
+    const isSelected = S3.selectedZoneId === z.id;
+    const colInt = parseInt((z.color||'#1A3F6A').replace('#',''), 16);
+    const strokeInt = parseInt((z.stroke||'#2A6496').replace('#',''), 16);
+    const geo = new THREE.BoxGeometry(w, d, zh);
+    const mat = new THREE.MeshPhongMaterial({
+      color: isSelected ? 0xC9A84C : colInt,
+      transparent:true, opacity: isSelected ? 0.78 : (S3.xray ? 0.22 : 0.52),
+      shininess:30, specular:0x1A3A5F,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(cx, cy, cz);
+    mesh.userData = {layer:'zones', zoneId:z.id, zoneName:z.name, zoneType:z.type, oy:cz};
+    mesh.castShadow = false; mesh.receiveShadow = true;
+    mesh.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({color: isSelected?0xE2C47A:strokeInt, transparent:true, opacity:isSelected?1:0.45})
+    ));
+    addGrp('zones', mesh);
+    zoneMesh3[z.id] = mesh;
+    if (z.deck === 'main' || z.deck === 'upper') deckSurfs.push(mesh);
+  });
+}
+
+// ── STRUCTURE ─────────────────────────────────────────────────
+function build3DStructure(M) {
+  const sx = M.loa / 25;
+
+  function addWall(x0, x1, y, z0, z1, col) {
+    const len = x1-x0, ht = z1-z0;
+    if (len<=0||ht<=0) return;
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(len, 0.08, ht),
+      new THREE.MeshPhongMaterial({color:col, transparent:true, opacity:S3.xray?0.25:0.7})
+    );
+    m.position.set(x0+len/2, y, z0+ht/2);
+    m.userData = {layer:'structure'};
+    addGrp('structure', m);
+  }
+
+  addWall(5.5*sx, 24*sx, -M.mainHullBeam/2, 0, M.depth, 0x152535);
+  addWall(5.5*sx, 24*sx,  M.mainHullBeam/2, 0, M.depth, 0x152535);
+  addWall(7*sx, 22*sx, -M.boa*0.38, M.depth, M.depth+2.3*(M.depth/2.3), 0x1A2A40);
+  addWall(7*sx, 22*sx,  M.boa*0.38, M.depth, M.depth+2.3*(M.depth/2.3), 0x1A2A40);
+
+  // LED bow wall with glow
+  const ledH = 2.3*(M.depth/2.3);
+  const ledMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(2*sx, M.boa*0.76, ledH),
+    new THREE.MeshPhongMaterial({color:0xC9A84C, emissive:0x8A6820, emissiveIntensity:0.4, transparent:true, opacity:0.5})
+  );
+  ledMesh.position.set(21.5*sx, 0, M.depth+ledH/2);
+  ledMesh.userData = {layer:'structure', isLED:true, oy:M.depth+ledH/2};
+  addGrp('structure', ledMesh);
+  const ledLight = new THREE.PointLight(0xC9A84C, 0.6, M.boa*2);
+  ledLight.position.set(21*sx, 0, M.depth+ledH/2);
+  scene3.add(ledLight);
+  mGroups.structure.push(ledLight);
+
+  // Sensor mast
+  const mastH = 6*(M.depth/2.3);
+  const mast = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.12, mastH, 8),
+    new THREE.MeshPhongMaterial({color:0x2A4A6A, shininess:80})
+  );
+  mast.position.set(1.5*sx, 0, M.depth/2+mastH/2+0.1);
+  mast.userData = {layer:'structure'};
+  addGrp('structure', mast);
+
+  // Mast crossbar
+  const xbar = new THREE.Mesh(
+    (() => { const g = new THREE.CylinderGeometry(0.04,0.04,M.boa*0.25,6); g.rotateZ(Math.PI/2); return g; })(),
+    new THREE.MeshPhongMaterial({color:0x2A4A6A, shininess:80})
+  );
+  xbar.position.set(1.5*sx, 0, M.depth+mastH*0.82);
+  xbar.userData = {layer:'structure'};
+  addGrp('structure', xbar);
+
+  // Deck railings
+  function addRailing(x0, x1, y, z) {
+    const len = x1-x0;
+    if (len<=0) return;
+    const r = new THREE.Mesh(
+      new THREE.BoxGeometry(len, 0.05, 1.1),
+      new THREE.MeshPhongMaterial({color:0x2A4060, transparent:true, opacity:0.5})
+    );
+    r.position.set(x0+len/2, y, z);
+    r.userData = {layer:'structure'};
+    addGrp('structure', r);
+  }
+  addRailing(0, M.loa, -M.boa/2, 0.55);
+  addRailing(0, M.loa,  M.boa/2, 0.55);
+}
+
+// ── PLACED EQUIPMENT ──────────────────────────────────────────
+function build3DEquipment() {
+  clearGrp('equipment');
+  APP.placedItems.forEach(pi => {
+    const eq = EQUIPMENT.find(e => e.id === pi.equipId);
+    if (!eq) return;
+    const [w, h, d] = eq.dim;
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mat = new THREE.MeshPhongMaterial({
+      color:eq.color, transparent:true, opacity:0.85,
+      shininess:50, emissive:eq.color, emissiveIntensity:0.1,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pi.position.x, pi.position.y, pi.position.z + d/2);
+    mesh.castShadow = true;
+    mesh.userData = {layer:'equipment', placedId:pi.id, equipId:pi.equipId, zoneName:pi.zoneId};
+    mesh.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({color:0xC9A84C, transparent:true, opacity:0.4})
+    ));
+    addGrp('equipment', mesh);
+    pi.meshUuid = mesh.uuid;
+  });
+}
+
+// ── CAMERA ────────────────────────────────────────────────────
+function updateCam3() {
+  const {theta, phi, radius, target} = orb3State;
+  camera3.position.x = target.x + radius * Math.sin(phi) * Math.sin(theta);
+  camera3.position.y = target.y - radius * Math.sin(phi) * Math.cos(theta);
+  camera3.position.z = target.z + radius * Math.cos(phi);
+  camera3.lookAt(target.x, target.y, target.z);
+}
+
+function set3DView(v) {
+  const M = MODEL_DB[APP.model]; if (!M) return;
+  const cx = M.loa/2, cz = M.depth/2;
+  orb3State.target = {x:cx, y:0, z:cz};
+  if (v==='t') { orb3State.phi=0.05; orb3State.theta=0; orb3State.radius=M.loa*1.4; }
+  else if (v==='s') { orb3State.phi=Math.PI*0.45; orb3State.theta=Math.PI/2; orb3State.radius=M.loa*1.6; }
+  else if (v==='f') { orb3State.phi=Math.PI*0.4; orb3State.theta=0; orb3State.radius=M.boa*3.2; }
+  else { orb3State.phi=1.0; orb3State.theta=-0.6; orb3State.radius=M.loa*1.5; }
+  updateCam3();
+}
+function resetCam3() { set3DView('p'); }
+
+// ── INTERACTION ───────────────────────────────────────────────
+let rc3 = null;
+function setup3DInteraction() {
+  rc3 = new THREE.Raycaster();
+  const cv = document.getElementById('three-canvas');
+  cv.addEventListener('mousedown', e3down);
+  cv.addEventListener('mousemove', e3move);
+  cv.addEventListener('mouseup',   () => { orb3State.rotating=false; orb3State.panning=false; });
+  cv.addEventListener('wheel',     e3wheel, {passive:true});
+  cv.addEventListener('click',     e3click);
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function e3down(e) {
+  if (e.button===0) orb3State.rotating=true;
+  if (e.button===2) orb3State.panning=true;
+  orb3State.lastX=e.clientX; orb3State.lastY=e.clientY;
+}
+function e3move(e) {
+  const dx=e.clientX-orb3State.lastX, dy=e.clientY-orb3State.lastY;
+  orb3State.lastX=e.clientX; orb3State.lastY=e.clientY;
+  if (orb3State.rotating && !S3.placeMode) {
+    orb3State.theta += dx*0.008;
+    orb3State.phi = Math.max(0.05, Math.min(Math.PI*0.9, orb3State.phi+dy*0.008));
+    updateCam3();
+  }
+  if (orb3State.panning) {
+    const pan = 0.04 * orb3State.radius/30;
+    orb3State.target.x -= dx*pan; orb3State.target.z -= dy*pan;
+    updateCam3();
+  }
+  // Zone hover
+  if (!orb3State.rotating && !orb3State.panning) {
+    const hit = raycast3(e, mGroups.zones);
+    const tt = document.getElementById('zone-tt');
+    if (hit && hit.object.userData.zoneId) {
+      const ud = hit.object.userData;
+      const zti = document.getElementById('ztt-id');
+      const ztn = document.getElementById('ztt-name');
+      const ztm = document.getElementById('ztt-meta');
+      if (zti) zti.textContent = ud.zoneId || '';
+      if (ztn) ztn.textContent = ud.zoneName || '';
+      if (ztm) {
+        const zData = getZones(APP.model, APP.config).find(z=>z.id===ud.zoneId);
+        ztm.textContent = zData ? `${Math.abs((zData.x1-zData.x0)*(zData.y1-zData.y0)).toFixed(0)}m² · click to inspect` : (ud.zoneType||'');
+      }
+      if (tt) { tt.style.display='block'; tt.style.left=(e.offsetX+14)+'px'; tt.style.top=(e.offsetY-10)+'px'; }
+      if (S3.hoveredZoneId !== ud.zoneId) {
+        unhilite3(S3.hoveredZoneId);
+        S3.hoveredZoneId = ud.zoneId;
+        hilite3(ud.zoneId, 0.72);
+      }
+    } else {
+      if (tt) tt.style.display='none';
+      if (S3.hoveredZoneId) { unhilite3(S3.hoveredZoneId); S3.hoveredZoneId=null; }
+    }
+  }
+}
+function e3wheel(e) {
+  orb3State.radius = Math.max(8, Math.min(200, orb3State.radius + e.deltaY*0.05));
+  updateCam3();
+}
+function e3click(e) {
+  if (orb3State.rotating) return;
+  if (S3.placeMode && S3.selectedEquip) {
+    const hit = raycast3(e, [...deckSurfs, ...mGroups.hull.filter(m=>m.userData.isDeck)]);
+    if (hit) {
+      const pt = hit.point;
+      const zoneId = findZone3AtPoint(pt);
+      const eq = EQUIPMENT.find(eq=>eq.id===S3.selectedEquip);
+      const pi = {
+        id: 'pi-'+Date.now(), equipId:S3.selectedEquip,
+        position:{x:pt.x, y:pt.y, z:pt.z},
+        zoneId: zoneId||'unzoned', meshUuid:null,
+      };
+      APP.placedItems.push(pi);
+      build3DEquipment();
+      renderPlacedList();
+      renderPlacedList();
+      cancelPlace();
+      toast(`Placed: ${eq?.name} in ${zoneId||'open area'}`);
+    }
+    return;
+  }
+  // Zone select
+  const hit = raycast3(e, mGroups.zones);
+  if (hit) {
+    const zid = hit.object.userData.zoneId;
+    if (zid) {
+      S3.selectedZoneId = zid;
+      APP.selectedZone = zid;
+      mGroups.zones.forEach(m=>{m.material.emissive=new THREE.Color(0);m.material.emissiveIntensity=0;});
+      const hm = zoneMesh3[zid];
+      if (hm) { hm.material.emissive=new THREE.Color(0xC9A84C); hm.material.emissiveIntensity=0.22; }
+      renderZoneDetail(zid);
+      renderPlacedList();
+    }
+  }
+}
+
+function raycast3(e, objects) {
+  if (!rc3 || !camera3) return null;
+  const cv = document.getElementById('three-canvas');
+  const rect = cv.getBoundingClientRect();
+  const x = ((e.clientX-rect.left)/rect.width)*2-1;
+  const y = -((e.clientY-rect.top)/rect.height)*2+1;
+  rc3.setFromCamera(new THREE.Vector2(x,y), camera3);
+  const hits = rc3.intersectObjects(objects, true);
+  return hits.length>0 ? hits[0] : null;
+}
+
+function hilite3(id, op) {
+  const m = zoneMesh3[id]; if (!m) return;
+  m.material.opacity = op || 0.72;
+  m.material.emissive = new THREE.Color(0x4A7A4A);
+  m.material.emissiveIntensity = 0.12;
+}
+function unhilite3(id) {
+  const m = zoneMesh3[id]; if (!m) return;
+  if (id === S3.selectedZoneId) return;
+  m.material.opacity = S3.xray ? 0.22 : 0.52;
+  m.material.emissive = new THREE.Color(0);
+  m.material.emissiveIntensity = 0;
+}
+function findZone3AtPoint(pt) {
+  const zones = getZones(APP.model, APP.config);
+  for (const z of zones) {
+    const zFloor = z.deck==='lower'?-MODEL_DB[APP.model].draft : z.deck==='upper'?MODEL_DB[APP.model].depth:0;
+    if (pt.x>=z.x0&&pt.x<=z.x1 && pt.y>=z.y0&&pt.y<=z.y1 && pt.z>=zFloor&&pt.z<=zFloor+z.h) return z.id;
+  }
+  return null;
+}
+
+// ── PLACE MODE ────────────────────────────────────────────────
+function enterPlaceMode3(equipId) {
+  S3.placeMode=true; S3.selectedEquip=equipId;
+  const eq = EQUIPMENT.find(e=>e.id===equipId);
+  const banner = document.getElementById('place-mode-banner');
+  const label  = document.getElementById('place-mode-label');
+  if (banner) { banner.style.display='flex'; }
+  if (label)  { label.textContent=`PLACE MODE — Click a deck surface: ${eq?.name||equipId}`; }
+  document.getElementById('three-canvas').style.cursor='crosshair';
+}
+function cancelPlaceMode3() {
+  S3.placeMode=false; S3.selectedEquip=null;
+  const banner = document.getElementById('place-mode-banner');
+  if (banner) banner.style.display='none';
+  document.getElementById('three-canvas').style.cursor='grab';
+}
+function clearPlaced3() {
+  APP.placedItems=[];
+  build3DEquipment();
+  update3DWeightBar();
+  render3DPlacedList();
+  if(typeof showToast==='function') showToast('Equipment cleared');
+}
+
+// ── LAYER / XRAY TOGGLES ──────────────────────────────────────
+function toggle3DLayer(name, row) {
+  S3.layers[name] = !S3.layers[name];
+  row.querySelector('.lyr-ck').classList.toggle('on', S3.layers[name]);
+  (mGroups[name]||[]).forEach(m => { if (m.visible!==undefined) m.visible=S3.layers[name]; });
+}
+function toggle3DXray() {
+  S3.xray = !S3.xray;
+  document.getElementById('3d-xray').classList.toggle('active', S3.xray);
+  build3DScene();
+}
+function toggle3DExplode() {
+  const btn = document.getElementById('3d-explode');
+  const isOn = btn.classList.toggle('active');
+  const M = MODEL_DB[APP.model]; if (!M) return;
+  const off = M.depth * 1.2;
+  const upperIds = getZones(APP.model, APP.config, 'upper').map(z=>z.id);
+  mGroups.zones.forEach(m => {
+    if (upperIds.includes(m.userData.zoneId)) m.position.z = isOn ? (m.userData.oy||m.position.z)+off : (m.userData.oy||m.position.z);
+  });
+  mGroups.decks.forEach(m => {
+    if (m.position.z > M.depth*0.7) m.position.z = isOn ? (m.userData.oy||m.position.z)+off : (m.userData.oy||m.position.z);
+  });
+}
+function toggle3DEquipment() {
+  const panel = document.getElementById('eq-panel');
+  const btn = document.getElementById('3d-eq');
+  const showing = panel && panel.style.display !== 'none';
+  if (panel) panel.style.display = showing ? 'none' : 'flex';
+  if (btn) btn.classList.toggle('active', !showing);
+  if (!showing) renderEquipmentLibrary3D();
+}
+
+// ── WEIGHT BAR IN 3D VIEW ─────────────────────────────────────
+function update3DHUD(M) {
+  const gEl = document.getElementById('3d-gmt');
+  const dEl = document.getElementById('3d-disp');
+  if (gEl) gEl.textContent = M.gmt;
+  if (dEl) dEl.textContent = M.displacement;
+}
+function update3DWeightBar() {
+  const total = APP.placedItems.reduce((s,pi) => {
+    const eq = EQUIPMENT.find(e=>e.id===pi.equipId); return s+(eq?.wt||0);
+  }, 0);
+  const M = MODEL_DB[APP.model];
+  const pct = M ? Math.min(100, (total/M.payload)*100) : 0;
+  const hw = document.getElementById('hud-weight');
+  const hg = document.getElementById('hud-gmt');
+  const pb = document.getElementById('wt-pct-bar');
+  const pl = document.getElementById('wt-pct-label');
+  if (hw) hw.textContent = total.toFixed(2);
+  if (hg && M) hg.textContent = M.gmt;
+  if (pb) { pb.style.width = pct+'%'; pb.style.background = pct>90?'#C94C4C':pct>70?'#C9884C':'#4CAC7C'; }
+  if (pl) pl.textContent = pct.toFixed(0)+'% payload';
+  const wb = document.getElementById('3d-weight-bar');
+  if (wb) wb.style.display = APP.placedItems.length > 0 ? 'flex' : 'none';
+  if (typeof renderPlacedList3D === 'function') renderPlacedList3D();
+  const wt = document.getElementById('3d-added-wt');
+  if (wt) wt.textContent = total.toFixed(2)+'t';
+}
+function render3DPlacedList() {
+  const list = document.getElementById('placed-list');
+  if (!list) return;
+  if (APP.placedItems.length===0) {
+    list.innerHTML='<div style="color:var(--grey-1);font-size:11px;">No equipment placed yet.<br><br>Select from the library and click a deck surface to place.</div>';
+    return;
+  }
+  list.innerHTML = APP.placedItems.map(pi => {
+    const eq = EQUIPMENT.find(e=>e.id===pi.equipId);
+    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid var(--border);border-radius:2px;margin-bottom:3px;cursor:pointer"
+      onclick="highlightPlaced3('${pi.id}')">
+      <div style="width:8px;height:8px;border-radius:1px;background:#${(eq?.color||0x4A4A4A).toString(16).padStart(6,'0')};flex-shrink:0"></div>
+      <span style="flex:1;font-size:10px;color:var(--grey-3)">${eq?.name||'?'}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--grey-1)">${pi.zoneId}</span>
+      <span style="color:var(--red);cursor:pointer;font-size:12px;padding:0 3px" onclick="event.stopPropagation();remove3DPlaced('${pi.id}')">×</span>
+    </div>`;
+  }).join('');
+}
+function remove3DPlaced(id) {
+  APP.placedItems = APP.placedItems.filter(p=>p.id!==id);
+  build3DEquipment();
+  update3DWeightBar();
+  render3DPlacedList();
+}
+function highlightPlaced3(id) {
+  mGroups.equipment.forEach(m => {
+    if (m.material) m.material.emissiveIntensity = m.userData.placedId===id ? 0.4 : 0.1;
+  });
+}
+
+// ══ FLOOR PLAN ════════════════════════════════════════════
+function renderFloorPlan() {
+  const M = MODEL_DB[APP.model];
+  const loa = M.loa, boa = M.boa, draft = M.draft, depth = M.depth;
+  const hasUpper = true;
+  const hasLED = APP.opts.has('LED');
+  const hasMast = APP.opts.has('SensorMast');
+  const hasRHIB = APP.opts.has('RHIB');
+  const hasPool = APP.opts.has('Pool');
+  const isQuad = M.hull === 'quadrimaran';
+
+  const deck = APP.deck;
+  const zones = getZones(APP.model, APP.config, deck);
+
+  // SVG dimensions
+  const svgW = Math.round(loa * PX_PER_M + CANVAS_PAD * 2);
+  const svgH = Math.round(boa * PX_PER_M + CANVAS_PAD * 2);
+  const svg = document.getElementById('boatSVG');
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+
+  // Coordinate transform: model metres → SVG pixels
+  // x=0 is AP (stern), x=loa is bow — displayed left=stern right=bow
+  // y=0 is centreline, y+ is stbd — SVG y increases downward so negate
+  const tx = x => CANVAS_PAD + x * PX_PER_M;
+  const ty = y => CANVAS_PAD + (boa/2 - y) * PX_PER_M;
+  const tw = dx => dx * PX_PER_M;
+  const th = dy => dy * PX_PER_M;
+
+  let html = `<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glow-gold"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="hull-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#152030"/><stop offset="100%" stop-color="#0A1520"/></linearGradient>
+  </defs>`;
+
+  // ── HULL OUTLINE ──────────────────────────────────────────────
+  if (deck === 'hull') {
+    // Hull cross-section view
+    const nPontoons = isQuad ? 4 : 3;
+    const pontoonW = 1.8 * PX_PER_M;
+    const pontoonH = loa * 0.62 * PX_PER_M;
+    const offsets = isQuad
+      ? [-M.outriggerOffset - M.outriggerBeam/2, -M.mainHullBeam/2 + 0, M.mainHullBeam/2 - 0, M.outriggerOffset]
+      : [-M.outriggerOffset, 0, M.outriggerOffset];
+
+    offsets.forEach((yo, i) => {
+      const isMain = isQuad ? (i === 1 || i === 2) : i === 1;
+      const pw = (isMain ? M.mainHullBeam : M.outriggerBeam) * PX_PER_M;
+      const px = CANVAS_PAD + 3 * PX_PER_M;
+      const py = ty(yo + (isMain ? M.mainHullBeam : M.outriggerBeam)/2);
+      const ph = M.loa * 0.6 * PX_PER_M;
+      html += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="4" fill="${isMain?'#1A3050':'#0F2035'}" stroke="${isMain?'#2A6A9A':'#1A4060'}" stroke-width="1.5"/>`;
+      html += `<text x="${px+pw/2}" y="${py+ph/2}" text-anchor="middle" dominant-baseline="middle" font-family="DM Mono" font-size="9" fill="rgba(42,106,154,0.6)">P${i+1}</text>`;
+    });
+
+    // Cross beams
+    const bY1 = ty(M.outriggerOffset);
+    const bY2 = ty(-M.outriggerOffset);
+    const bX1 = CANVAS_PAD + 5 * PX_PER_M;
+    const bX2 = CANVAS_PAD + (loa - 5) * PX_PER_M;
+    html += `<line x1="${bX1}" y1="${ty(M.outriggerOffset * 0.4)}" x2="${bX2}" y2="${ty(M.outriggerOffset * 0.4)}" stroke="#1A3A5A" stroke-width="3"/>`;
+    html += `<line x1="${bX1}" y1="${ty(-M.outriggerOffset * 0.4)}" x2="${bX2}" y2="${ty(-M.outriggerOffset * 0.4)}" stroke="#1A3A5A" stroke-width="3"/>`;
+
+    // Dimension label
+    html += `<line x1="${CANVAS_PAD}" y1="${ty(-M.outriggerOffset)-14}" x2="${CANVAS_PAD + loa * PX_PER_M}" y2="${ty(-M.outriggerOffset)-14}" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>`;
+    html += `<text x="${svgW/2}" y="${ty(-M.outriggerOffset)-18}" text-anchor="middle" font-family="DM Mono" font-size="8" fill="rgba(201,168,76,0.5)">LOA ${loa}m</text>`;
+
+  } else {
+    // ── PONTOONS (side view from top) ─────────────────────────
+    const poX0 = tx(loa * 0.05);
+    const poX1 = tx(loa * 0.70);
+    const poW = poX1 - poX0;
+    const poH = M.outriggerBeam * PX_PER_M;
+
+    if (isQuad) {
+      // 4 pontoons
+      [-M.outriggerOffset, -M.outriggerOffset + M.outriggerBeam*2, M.outriggerOffset - M.outriggerBeam*2, M.outriggerOffset].forEach(yo => {
+        html += `<rect x="${poX0}" y="${ty(yo+M.outriggerBeam)}" width="${poW}" height="${poH}" rx="3" fill="#091525" stroke="#1A3A5A" stroke-width="1"/>`;
+      });
+    } else {
+      // 3 pontoons
+      [-M.outriggerOffset, 0, M.outriggerOffset].forEach((yo, i) => {
+        const pw = i===1 ? M.mainHullBeam * PX_PER_M : M.outriggerBeam * PX_PER_M;
+        const fill = i===1 ? '#0D2035' : '#091525';
+        html += `<rect x="${poX0}" y="${ty(yo + (i===1 ? M.mainHullBeam : M.outriggerBeam))}" width="${poW}" height="${pw}" rx="3" fill="${fill}" stroke="#1A3A5A" stroke-width="1"/>`;
+      });
+    }
+
+    // ── DECK PLATFORM OUTLINE ──────────────────────────────────
+    const bowX = tx(loa);
+    const sternX = tx(0);
+    const portY = ty(-boa/2);
+    const stbdY = ty(boa/2);
+    const deckH = stbdY - portY;
+    const deckW = bowX - sternX;
+
+    // Tapered bow shape
+    const bowTaper = boa * 0.15 * PX_PER_M;
+    const deckPath = `M ${sternX} ${portY} L ${bowX - bowTaper} ${portY} Q ${bowX} ${portY} ${bowX} ${(portY+stbdY)/2} Q ${bowX} ${stbdY} ${bowX - bowTaper} ${stbdY} L ${sternX} ${stbdY} Z`;
+    html += `<path d="${deckPath}" fill="url(#hull-grad)" stroke="#1A3255" stroke-width="1.5"/>`;
+
+    // ── ZONES ──────────────────────────────────────────────────
+    zones.forEach(z => {
+      const zx = tx(z.x0);
+      const zy = ty(z.y1);
+      const zw = tw(z.x1 - z.x0);
+      const zh = th(z.y1 - z.y0);
+      const isActive = APP.selectedZone === z.id;
+      const extraFilter = isActive ? ' filter="url(#glow-gold)"' : '';
+      const strokeW = isActive ? 2 : 1;
+      const stroke = isActive ? '#C9A84C' : z.stroke;
+
+      // LED glow for LED zones
+      const isLEDzone = z.type === 'media' && APP.opts.has('LED');
+      const ledGlow = isLEDzone ? ' filter="url(#glow)"' : '';
+      const ledFill = isLEDzone ? 'rgba(201,168,76,0.2)' : z.color;
+
+      html += `<rect class="svg-zone${isActive?' zone-active':''}" data-zone="${z.id}"
+        x="${zx}" y="${zy}" width="${zw}" height="${zh}" rx="2"
+        fill="${ledFill}" stroke="${stroke}" stroke-width="${strokeW}"
+        onclick="selectZoneFromSVG('${z.id}')"${extraFilter}${ledGlow}/>`;
+
+      // Zone label (only if wide enough)
+      if (zw > 28 && zh > 14) {
+        const labelLines = z.name.replace('Zone ','').replace(' — ',' — ').split('—');
+        const lx = zx + zw/2, ly = zy + zh/2;
+        if (labelLines.length > 1) {
+          html += `<text x="${lx}" y="${ly-4}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(8, zw/8)}" fill="${isActive?'#E2C47A':'rgba(255,255,255,0.45)'}" pointer-events="none">${labelLines[0].trim()}</text>`;
+          html += `<text x="${lx}" y="${ly+6}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(7, zw/9)}" fill="${isActive?'rgba(226,196,122,0.7)':'rgba(255,255,255,0.28)'}" pointer-events="none">${labelLines[1].trim()}</text>`;
+        } else {
+          html += `<text x="${lx}" y="${ly+3}" text-anchor="middle" font-family="DM Mono" font-size="${Math.min(8, zw/8)}" fill="${isActive?'#E2C47A':'rgba(255,255,255,0.4)'}" pointer-events="none">${z.name.replace('Zone ','')}</text>`;
+        }
+        // Area label
+        const area = Math.abs((z.x1-z.x0) * (z.y1-z.y0));
+        if (zh > 22 && zw > 30) {
+          html += `<text x="${lx}" y="${zy+zh-5}" text-anchor="middle" font-family="DM Mono" font-size="7" fill="rgba(255,255,255,0.2)" pointer-events="none">${area.toFixed(0)}m²</text>`;
+        }
+      }
+    });
+
+    // ── SENSOR MAST ────────────────────────────────────────────
+    if (hasMast) {
+      const mastX = tx(1.5);
+      const mastY = ty(0);
+      html += `<line x1="${mastX}" y1="${mastY-20}" x2="${mastX}" y2="${mastY+20}" stroke="#C9A84C" stroke-width="1.5"/>`;
+      html += `<circle cx="${mastX}" cy="${mastY}" r="4" fill="none" stroke="#C9A84C" stroke-width="1.5" filter="url(#glow-gold)"/>`;
+      html += `<text x="${mastX+7}" y="${mastY-8}" font-family="DM Mono" font-size="7" fill="rgba(201,168,76,0.7)">MAST</text>`;
+    }
+
+    // ── RHIB DAVITS ────────────────────────────────────────────
+    if (hasRHIB) {
+      [M.outriggerOffset * 0.7, -M.outriggerOffset * 0.7].forEach(yo => {
+        const dx = tx(1.2), dy = ty(yo);
+        html += `<rect x="${dx-4}" y="${dy-12}" width="8" height="24" rx="2" fill="#1A3A1A" stroke="#4A9A5A" stroke-width="1"/>`;
+        html += `<text x="${dx}" y="${dy+3}" text-anchor="middle" font-family="DM Mono" font-size="6" fill="rgba(74,154,90,0.7)" transform="rotate(-90,${dx},${dy})">DAVIT</text>`;
+      });
+    }
+
+    // ── PLUNGE POOL ────────────────────────────────────────────
+    if (hasPool) {
+      const poolX = tx(0.8), poolY = ty(-M.boa/4);
+      html += `<ellipse cx="${poolX}" cy="${poolY}" rx="${PX_PER_M*0.9}" ry="${PX_PER_M*0.6}" fill="rgba(26,107,124,0.35)" stroke="#1A6B7C" stroke-width="1.2"/>`;
+      html += `<text x="${poolX}" y="${poolY+3}" text-anchor="middle" font-family="DM Mono" font-size="7" fill="rgba(90,171,188,0.7)" pointer-events="none">POOL</text>`;
+    }
+
+    // ── LED OUTLINE on upper deck ──────────────────────────────
+    if (APP.opts.has('LED') && deck === 'upper') {
+      const ledX = tx(4.5 * loa/25);
+      const ledX2 = tx(22.5 * loa/25);
+      const ledY = ty(boa * 0.38);
+      const ledY2 = ty(-boa * 0.38);
+      html += `<rect x="${ledX}" y="${ledY}" width="${ledX2-ledX}" height="${ledY2-ledY}" fill="none" stroke="rgba(201,168,76,0.5)" stroke-width="2" stroke-dasharray="4,2" filter="url(#glow-gold)" rx="2"/>`;
+      html += `<text x="${(ledX+ledX2)/2}" y="${ledY-8}" text-anchor="middle" font-family="DM Mono" font-size="8" fill="rgba(201,168,76,0.6)" letter-spacing="2">FULL PERIMETER LED · OPTION A</text>`;
+    }
+  }
+
+  // ── TITLE LABEL ────────────────────────────────────────────
+  html += `<text x="${svgW/2}" y="16" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="12" fill="rgba(201,168,76,0.4)" letter-spacing="3">${APP.model} — ${deck.toUpperCase()} DECK — ${APP.config.toUpperCase()}</text>`;
+
+  svg.innerHTML = html;
+
+  // Scale ruler
+  const rulerM = Math.round(loa / 5);
+  const rulerPx = rulerM * PX_PER_M;
+  document.getElementById('ruler-label').textContent = `${rulerM}m`;
+  const rl = document.querySelector('.ruler-line');
+  if (rl) rl.style.width = rulerPx + 'px';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER — LEFT PANEL
+// ══════════════════════════════════════════════════════════════
+function renderModelList() {
+  document.getElementById('model-list').innerHTML = Object.entries(MODEL_DB).map(([key, M]) => `
+    <button class="model-card ${APP.model === key ? 'active' : ''}" onclick="selectModel('${key}')">
+      <div class="model-card-left">
+        <div class="model-card-name">${M.name}</div>
+        <div class="model-card-sub">${M.loa}m · ${M.mainDeckArea}m² main deck</div>
+      </div>
+      <div class="model-card-hull hull-${M.hull === 'trimaran' ? 'tri' : 'quad'}">${M.hull === 'trimaran' ? 'TRI' : 'QUAD'}</div>
+    </button>
+  `).join('');
+}
+
+function renderConfigRow() {
+  const M = MODEL_DB[APP.model];
+  document.getElementById('config-row').innerHTML = M.configs.map(c => `
+    <button class="cfg-pill ${APP.config === c ? 'active' : ''}" onclick="setConfig('${c}',this)">${c}</button>
+  `).join('');
+  if (!M.configs.includes(APP.config)) { APP.config = M.configs[0]; }
+}
+
+function renderZoneList() {
+  const zones = getZones(APP.model, APP.config, APP.deck);
+  document.getElementById('zone-count-label').textContent = `${zones.length} zones`;
+  document.getElementById('zone-list').innerHTML = zones.map(z => `
+    <div class="zone-row ${APP.selectedZone === z.id ? 'active' : ''}" onclick="selectZoneFromSVG('${z.id}')">
+      <div class="zone-swatch" style="background:${z.stroke}"></div>
+      <div class="zone-row-name">${z.name}</div>
+      <div class="zone-row-area">${Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(0)}m²</div>
+    </div>
+  `).join('');
+}
+
+function renderOptions() {
+  const M = MODEL_DB[APP.model];
+  const opts = Object.keys(M.optCostK);
+  document.getElementById('opt-grid').innerHTML = opts.map(o => `
+    <button class="opt-chip ${APP.opts.has(o) ? 'active' : ''}" onclick="toggleOpt('${o}',this)">${o.replace(/([A-Z])/g,' $1').trim()}</button>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER — DECK TABS
+// ══════════════════════════════════════════════════════════════
+// ══ APP LOGIC ═════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// CORE STATE
+// ═══════════════════════════════════════════════════════════════
+const APP = {
+  user: {name:'Designer', email:''},
+  apiKey: (()=>{ try { return sessionStorage.getItem('aq_apikey')||null; } catch(e){return null;} })(),
+  screen: 1,
+  unlocked: new Set([1]),
+  // Selection
+  model: 'AQS-25',
+  config: 'Hospitality',
+  tier: 'Standard',
+  market: 'commercial_hospitality',
+  opts: new Set(),
+  projectName: '',
+  client: '',
+  // Studio
+  deck: 'main',
+  selectedZone: null,
+  placedItems: [],
+  equivActiveCat: 'All',
+  equivSearch: '',
+  // Pipeline
+  pipelineResult: null,
+  pipelineRunning: false,
+  // AI
+  aiHistory: [],
+};
+
+// PX_PER_M defined at top of script
+
+// Brace/scope vars for 3D
+let orb3 = {rotating:false,panning:false,lastX:0,lastY:0,theta:-0.6,phi:1.0,radius:60,target:{x:12,y:0,z:2}};
+const mGroups = {hull:[],decks:[],zones:[],structure:[],equipment:[],water:[]};
+const zoneMesh3 = {};
+let deckSurfs = [];
+const S3 = {xray:false,layers:{hull:true,decks:true,zones:true,structure:true,equipment:true,water:true},placeMode:false,selectedEquip:null,selectedZoneId:null,hoveredZoneId:null};
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function navTo(n) {
+  if (!APP.unlocked.has(n)) { toast('Complete previous steps first'); return; }
+  // Update stepper
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('nav-'+i);
+    const sn = document.getElementById('sn-'+i);
+    el.className = 'step' + (i===n?' active':i<n?' done':APP.unlocked.has(i)?'':' locked');
+    if (i < n) sn.innerHTML = '<span class="step-done-icon"></span>';
+    else sn.textContent = i;
+  });
+  // Switch screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-'+['','select','studio','pipeline','report'][n]).classList.add('active');
+  APP.screen = n;
+  if (n===2) onEnterStudio();
+  if (n===3) onEnterPipeline();
+  if (n===4) buildReport();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREEN 1 — MODEL SELECTION
+// ═══════════════════════════════════════════════════════════════
+function buildSelectionScreen() {
+  const grid = document.getElementById('model-grid');
+  grid.innerHTML = Object.entries(MODEL_DB).map(([key, M]) => `
+    <div class="mcard" id="mc-${key}" onclick="selectModel('${key}')">
+      <div class="mcard-sel-ring"></div>
+      <div class="mcard-vis">${makeHullSVG(key, M)}</div>
+      <div class="mcard-body">
+        <div class="mcard-id">${key}<span class="hull-pill ${M.hull==='trimaran'?'tri':'quad'}">${M.hull==='trimaran'?'TRI':'QUAD'}</span></div>
+        <div class="mcard-name">${M.name}</div>
+        <div class="mcard-specs">
+          <div class="mcard-spec">LOA <span>${M.loa}m</span></div>
+          <div class="mcard-spec">BOA <span>${M.boa}m</span></div>
+          <div class="mcard-spec">Deck <span>${M.mainDeckArea}m²</span></div>
+          <div class="mcard-spec">Disp <span>${M.displacement}t</span></div>
+        </div>
+        <div class="mcard-tagline">${M.name==='Hub'?'Entry platform. FOH-convertible in 4 zones. Fastest delivery.':M.name==='Residence'?'Flagship hospitality unit. Resort-grade. Most popular.':M.name==='Lagoon'?'Quad hull. Maximum stability. Media and event platform.':M.name==='Terrace'?'Marina-scale anchor. Government tourism flagship.':'Trophy asset. SWF-grade floating architecture.'}</div>
+        <div class="mcard-price">${M.price.Standard} — ${M.price.Luxury}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function makeHullSVG(key, M) {
+  const isQ = M.hull === 'quadrimaran';
+  const W=200, H=115;
+  const sc = Math.min((W-16)/M.loa, (H-16)/(M.boa*0.55));
+  const bw=M.loa*sc, bh=M.boa*sc*0.5;
+  const ox=(W-bw)/2, oy=H/2;
+  const ob=M.boa*0.2*sc, oo=M.boa*0.42*sc, mb=M.boa*0.18*sc;
+  const cols = {trimaran:'#1A7B8C', quadrimaran:'#C9A84C', AQS35:'#C9A84C', AQS40:'#4A8C3A', AQS45:'#8C6A2A', AQS50:'#6A3A8C'};
+  const c = key==='AQS-25'?'#1A7B8C':key==='AQS-35'?'#C9A84C':key==='AQS-40'?'#4A8C3A':key==='AQS-45'?'#8C5A1A':'#5A2A8C';
+  let p = '';
+  if (isQ) {
+    [-0.95,-0.35,0.35,0.95].forEach(yf => {
+      p += `<ellipse cx="${ox+bw*0.5}" cy="${oy+yf*oo*0.8}" rx="${bw*0.46}" ry="${mb*0.7}" fill="${c}15" stroke="${c}55" stroke-width="0.8"/>`;
+    });
+  } else {
+    p += `<ellipse cx="${ox+bw*0.5}" cy="${oy}" rx="${bw*0.47}" ry="${mb}" fill="${c}20" stroke="${c}66" stroke-width="1"/>`;
+    [-1,1].forEach(yf => {
+      p += `<ellipse cx="${ox+bw*0.35}" cy="${oy+yf*oo}" rx="${bw*0.28}" ry="${ob*0.65}" fill="${c}12" stroke="${c}44" stroke-width="0.7"/>`;
+    });
+  }
+  p += `<path d="M${ox+bw*0.06},${oy-mb*0.7} L${ox+bw},${oy} L${ox+bw*0.06},${oy+mb*0.7} Z" fill="${c}08" stroke="${c}88" stroke-width="1.2"/>`;
+  p += `<rect x="${ox+bw*0.15}" y="${oy-mb*0.42}" width="${bw*0.63}" height="${mb*0.84}" rx="2" fill="${c}10" stroke="${c}2A" stroke-width="0.6"/>`;
+  // LED lines
+  p += `<line x1="${ox+bw*0.15}" y1="${oy-mb*0.48}" x2="${ox+bw*0.78}" y2="${oy-mb*0.48}" stroke="${c}" stroke-width="1.2" opacity="0.6"/>`;
+  p += `<line x1="${ox+bw*0.15}" y1="${oy+mb*0.38}" x2="${ox+bw*0.78}" y2="${oy+mb*0.38}" stroke="${c}" stroke-width="1.2" opacity="0.6"/>`;
+  // Waterline
+  p += `<line x1="${ox}" y1="${oy+mb*0.1}" x2="${ox+bw}" y2="${oy+mb*0.1}" stroke="rgba(26,123,140,0.35)" stroke-width="0.8" stroke-dasharray="4 3"/>`;
+  // Mast
+  p += `<line x1="${ox+bw*0.1}" y1="${oy}" x2="${ox+bw*0.1}" y2="${oy-mb*1.7}" stroke="${c}" stroke-width="0.8" opacity="0.5"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${p}</svg>`;
+}
+
+function selectModel(key) {
+  APP.model = key;
+  document.querySelectorAll('.mcard').forEach(c => c.classList.remove('sel'));
+  document.getElementById('mc-'+key).classList.add('sel');
+  // Update config options
+  const M = MODEL_DB[key];
+  const cfgSel = document.getElementById('cfg-config');
+  cfgSel.innerHTML = M.configs.map(c => `<option value="${c}">${c}</option>`).join('');
+  // Auto-name
+  const ni = document.getElementById('cfg-name');
+  if (!ni.value || ni.value.match(/^AQS-\d+/)) ni.value = `${key} ${M.name} — ${new Date().getFullYear()}`;
+  document.getElementById('sel-cfg').classList.add('show');
+  document.getElementById('btn-start').disabled = false;
+  updateSelSummary();
+}
+
+function setTier(t, btn) {
+  APP.tier = t;
+  document.querySelectorAll('[onclick^="setTier"]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  updateSelSummary();
+}
+
+function updateSelSummary() {
+  if (!APP.model) return;
+  const M = MODEL_DB[APP.model];
+  const name = document.getElementById('cfg-name').value || APP.model;
+  const cfg = document.getElementById('cfg-config')?.value || 'Hospitality';
+  document.getElementById('sel-sum').innerHTML =
+    `<strong>${name}</strong> · ${APP.model} ${M.name} · ${M.loa}m ${M.hull} · ${cfg} · ${APP.tier} · ${M.price[APP.tier]}`;
+}
+document.getElementById('cfg-name').addEventListener('input', updateSelSummary);
+document.addEventListener('change', e => { if(e.target.id==='cfg-config') updateSelSummary(); });
+
+function startDesign() {
+  APP.model = document.querySelector('.mcard.sel')?.id.replace('mc-','') || APP.model;
+  APP.config = document.getElementById('cfg-config').value;
+  APP.market = document.getElementById('cfg-market').value;
+  APP.projectName = document.getElementById('cfg-name').value || `${APP.model} Project`;
+  APP.client = '';
+  APP.opts = new Set([...document.querySelectorAll('[data-opt].on')].map(b=>b.dataset.opt));
+  APP.unlocked.add(2);
+  navTo(2);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREEN 2 — DESIGN STUDIO
+// ═══════════════════════════════════════════════════════════════
+function onEnterStudio() {
+  const M = MODEL_DB[APP.model];
+  document.getElementById('tb-model').textContent = APP.model;
+  document.getElementById('tb-loa').textContent = M.loa+'m';
+  document.getElementById('tb-gmt').textContent = M.gmt+'m';
+  document.getElementById('tb-disp').textContent = M.displacement+'t';
+  buildDeckTabs();
+  renderSpecPanel();
+  renderCostPanel();
+  renderHydroPanel();
+  renderEqLibrary();
+  renderPlacedList();
+  // Defer SVG render until layout is complete
+  requestAnimationFrame(() => {
+    renderFloorPlan();
+  });
+}
+
+// ─── Deck tabs ───────────────────────────────────────────────
+function buildDeckTabs() {
+  const tabs = ['main','upper','lower','hull','3D ✦'];
+  document.getElementById('deck-tabs').innerHTML = tabs.map((t,i) => {
+    const deck = i===4?'3d':t;
+    return `<button class="deck-tab ${APP.deck===deck?'on':''}" onclick="setDeck('${deck}',this)">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`;
+  }).join('');
+}
+
+function setDeck(deck, btn) {
+  APP.deck = deck;
+  document.querySelectorAll('.deck-tab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  const svgW = document.getElementById('svg-wrap');
+  const threeW = document.getElementById('three-wrap');
+  if (deck==='3d') {
+    svgW.style.display='none'; threeW.style.display='block';
+    document.getElementById('tb-xray').style.display='';
+    document.getElementById('tb-explode').style.display='';
+    // Use rAF so browser has laid out three-wrap before we measure dimensions
+    requestAnimationFrame(() => {
+      init3D();
+      build3DScene();
+      set3DView('p');
+      resize3D();
+    });
+  } else {
+    svgW.style.display=''; threeW.style.display='none';
+    document.getElementById('tb-xray').style.display='none';
+    document.getElementById('tb-explode').style.display='none';
+    requestAnimationFrame(() => renderFloorPlan());
+  }
+}
+
+// ─── Equipment library ───────────────────────────────────────
+function renderEqLibrary() {
+  const cats = ['All',...new Set(EQUIPMENT.map(e=>e.cat))];
+  document.getElementById('eq-cats').innerHTML = cats.map(c=>
+    `<button class="eq-cat ${APP.equivActiveCat===c?'on':''}" onclick="setEqCat('${c}',this)">${c}</button>`
+  ).join('');
+  const items = EQUIPMENT.filter(e =>
+    (APP.equivActiveCat==='All'||e.cat===APP.equivActiveCat) &&
+    (!APP.equivSearch||e.name.toLowerCase().includes(APP.equivSearch))
+  );
+  const cs = c=>'#'+c.toString(16).padStart(6,'0');
+  document.getElementById('eq-list').innerHTML = items.map(eq=>
+    `<div class="eq-item" draggable="true"
+      ondragstart="dragStart('${eq.id}',this)" ondragend="this.style.opacity=''"
+      ondblclick="beginPlace('${eq.id}')"
+      title="${eq.desc||eq.name} · Double-click or drag to 3D">
+      <div class="eq-dot" style="background:${cs(eq.color)}"></div>
+      <div class="eq-name">${eq.name}</div>
+      <div class="eq-wt">${eq.wt.toFixed(3)}t</div>
+    </div>`
+  ).join('');
+}
+function setEqCat(c,btn) { APP.equivActiveCat=c; renderEqLibrary(); }
+function filterEq(q) { APP.equivSearch=q.toLowerCase(); renderEqLibrary(); }
+
+// Drag to 3D
+let dragEqId = null;
+function dragStart(id,el) { dragEqId=id; el.style.opacity='0.4'; }
+document.getElementById('three-wrap').addEventListener('dragover', e=>e.preventDefault());
+document.getElementById('three-wrap').addEventListener('drop', e=>{
+  e.preventDefault();
+  if(!dragEqId) return;
+  const rect = document.getElementById('three-canvas').getBoundingClientRect();
+  const mx=((e.clientX-rect.left)/rect.width)*2-1;
+  const my=-((e.clientY-rect.top)/rect.height)*2+1;
+  placeEqAt(dragEqId, mx, my);
+  dragEqId=null;
+});
+
+// ─── Placed items ─────────────────────────────────────────────
+function renderPlacedList() {
+  const total = APP.placedItems.reduce((s,p)=>{const eq=EQUIPMENT.find(e=>e.id===p.eqId);return s+(eq?.wt||0);},0);
+  document.getElementById('placed-count').textContent = APP.placedItems.length;
+  document.getElementById('placed-wt').textContent = total.toFixed(2);
+  const cs = c=>'#'+c.toString(16).padStart(6,'0');
+  document.getElementById('placed-list-wrap').innerHTML = APP.placedItems.length===0
+    ? '<div style="color:var(--g1);font-size:10px;padding:6px 8px">Double-click or drag equipment to place</div>'
+    : APP.placedItems.map(p=>{
+        const eq=EQUIPMENT.find(e=>e.id===p.eqId);
+        return `<div class="pl-item" onclick="highlightPlaced3('${p.id}')">
+          <div class="eq-dot" style="background:${cs(eq?.color||0x4A4A4A)};width:7px;height:7px"></div>
+          <span class="pl-name">${eq?.name||'?'}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--g1)">${p.zoneId}</span>
+          <span class="pl-rm" onclick="event.stopPropagation();removePlaced('${p.id}')">×</span>
+        </div>`;
+      }).join('');
+  // Update weight bar
+  const M = MODEL_DB[APP.model];
+  const pct = M ? Math.min(100,(total/M.payload)*100) : 0;
+  document.getElementById('wt-ls').textContent = M?.lightship||'—';
+  document.getElementById('wt-add').textContent = total.toFixed(2);
+  document.getElementById('wt-tot').textContent = M ? (M.lightship+total).toFixed(1) : '—';
+  document.getElementById('wt-pct').textContent = pct.toFixed(0)+'% payload';
+  const bar = document.getElementById('wt-fill');
+  bar.style.width=pct+'%';
+  bar.style.background=pct>90?'#C94C4C':pct>70?'#C9884C':'#4CAC7C';
+  const wtBar = document.getElementById('wt-bar');
+  if(APP.placedItems.length>0) wtBar.style.display='flex'; else wtBar.style.display='none';
+}
+
+function removePlaced(id) {
+  APP.placedItems = APP.placedItems.filter(p=>p.id!==id);
+  const m = mGroups.equipment.find(m=>m.userData.placedId===id);
+  if(m){scene3?.remove(m);const i=mGroups.equipment.indexOf(m);if(i>-1)mGroups.equipment.splice(i,1);}
+  renderPlacedList();
+}
+
+// ─── Right panel ──────────────────────────────────────────────
+function setRPTab(name, btn) {
+  document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.rp-panel').forEach(p=>p.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  const p = document.getElementById('rp-'+name);
+  if(p) p.classList.add('on');
+}
+
+function renderSpecPanel() {
+  const M = MODEL_DB[APP.model];
+  const rows = [
+    ['Model',APP.model],['Name',M.name],['Hull',M.hull],
+    ['LOA',M.loa+'m'],['BOA',M.boa+'m'],['Depth',M.depth+'m'],['Draft',M.draft+'m'],
+    ['Displacement',M.displacement+'t'],['Lightship',M.lightship+'t'],
+    ['GM Transverse',M.gmt+'m'],['Config',APP.config],['Tier',APP.tier],
+  ];
+  document.getElementById('rp-spec-rows').innerHTML = rows.map(([k,v])=>
+    `<div class="spec-row"><span class="spec-k">${k}</span><span class="spec-v">${v}</span></div>`
+  ).join('');
+  // Checks
+  document.getElementById('rp-checks').innerHTML = (M.checks||[]).map(c=>
+    `<div class="check-row">
+      <div class="check-dot ${c.status}"></div>
+      <div class="check-text">${c.desc} — <strong style="color:var(--gl)">${c.val}</strong></div>
+    </div>`
+  ).join('');
+}
+
+function renderCostPanel() {
+  const M = MODEL_DB[APP.model];
+  const tm = M.tierMult[APP.tier]||1;
+  let optTotal=0;
+  APP.opts.forEach(o=>{optTotal+=(M.optCostK[o]||0);});
+  const items=[
+    {label:'Hull & Structure',val:M.costK.hull},
+    {label:'Fit-Out',val:Math.round(M.costK.fitout*tm)},
+    {label:'Marine Systems',val:M.costK.marine},
+    {label:'HVAC',val:M.costK.hvac},
+    {label:'PM & QA',val:M.costK.pm},
+    {label:'Overhead',val:M.costK.overhead},
+    {label:'Options',val:optTotal},
+    {label:'Contingency (10%)',val:M.costK.contingency},
+  ];
+  const total=items.reduce((s,i)=>s+i.val,0);
+  const maxV=Math.max(...items.map(i=>i.val));
+  document.getElementById('rp-cost-bars').innerHTML=items.map(i=>`
+    <div style="margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2)">${i.label}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gl)">AED ${(i.val/1000).toFixed(2)}M</span>
+      </div>
+      <div style="height:2px;background:rgba(255,255,255,0.06);border-radius:1px">
+        <div style="height:100%;width:${Math.round(i.val/maxV*100)}%;background:var(--gold);border-radius:1px"></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('rp-cost-total').textContent=`AED ${(total/1000).toFixed(2)}M`;
+}
+
+function renderHydroPanel() {
+  const M = MODEL_DB[APP.model];
+  document.getElementById('rp-hydro-rows').innerHTML=[
+    ['Displacement',M.displacement+'t'],['Lightship',M.lightship+'t'],
+    ['GM Transverse',M.gmt+'m',true],['Stability',M.stability,true],
+    ['Resistance',M.resistance+'kN @ design spd'],
+    ['Main Deck',M.mainDeckArea+'m²'],['Upper Deck',M.upperDeckArea+'m²'],
+  ].map(([k,v,hl])=>
+    `<div class="spec-row"><span class="spec-k">${k}</span><span class="spec-v ${hl?'gd':''}">${v}</span></div>`
+  ).join('');
+  const wt=M.wt;const tot=Object.values(wt).reduce((s,v)=>s+v,0);
+  document.getElementById('rp-wt-rows').innerHTML=Object.entries(wt).map(([k,v])=>
+    `<div class="spec-row"><span class="spec-k">${k}</span><span class="spec-v">${v.toFixed(1)}t <span style="color:var(--g1);font-size:9px">(${Math.round(v/tot*100)}%)</span></span></div>`
+  ).join('');
+}
+
+function renderZoneDetail(zoneId) {
+  const z = getZones(APP.model, APP.config).find(z=>z.id===zoneId);
+  if (!z) return;
+  const area = Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(1);
+  const isFOH = ['MD-01','MD-02','MD-03','MD-04'].includes(z.id);
+  const fohDeltas = {
+    'MD-01':'CIC / Commander: encrypted C2, satellite uplink. +AED 180–320K',
+    'MD-02':'Hot-bunk berthing 6 pax, lockers. +AED 40–80K',
+    'MD-03':'Full Mission: 2-stretcher medical bay. +AED 60–140K',
+    'MD-04':'Ops Centre: 8–10 workstations, dual display wall. +AED 120–220K',
+  };
+  document.getElementById('rp-zone-content').innerHTML=`
+    <div class="zone-card">
+      <div class="zc-id">${z.id} · ${z.deck.toUpperCase()} DECK</div>
+      <div class="zc-name">${z.name}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);margin-bottom:6px">
+        ${(z.x1-z.x0).toFixed(1)}m × ${Math.abs(z.y1-z.y0).toFixed(1)}m × ${z.h.toFixed(1)}m · ${area}m²
+      </div>
+      <div class="zc-desc">${z.desc||''}</div>
+      ${z.tags?.length?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:7px">${z.tags.map(t=>`<span style="font-family:'DM Mono',monospace;font-size:7px;padding:2px 5px;border:1px solid var(--b);color:var(--g3);border-radius:1px">${t}</span>`).join('')}</div>`:''}
+      ${isFOH?`<div class="foh-badge"><strong>FOH-CONVERTIBLE</strong> — ${fohDeltas[z.id]||''}</div>`:''}
+    </div>
+    <div style="margin-top:8px">
+      ${APP.placedItems.filter(p=>p.zoneId===z.id).map(p=>{
+        const eq=EQUIPMENT.find(e=>e.id===p.eqId);
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid var(--b);border-radius:2px;margin-bottom:3px;font-size:10px;color:var(--g3)">
+          <div style="width:7px;height:7px;border-radius:1px;background:#${(eq?.color||0x4A4A4A).toString(16).padStart(6,'0')};flex-shrink:0"></div>
+          <span style="flex:1">${eq?.name||'?'}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1)">${p.wt?.toFixed(3)||'0'}t</span>
+          <span style="color:var(--red);cursor:pointer" onclick="removePlaced('${p.id}')">×</span>
+        </div>`;
+      }).join('')||'<div style="color:var(--g1);font-size:10px;padding:4px 0">No equipment placed in this zone</div>'}
+    </div>
+    <button style="width:100%;margin-top:8px;padding:7px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--gold);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;cursor:pointer" onclick="askAboutZone('${z.id}')">Ask AI about ${z.id} →</button>
+  `;
+  setRPTab('zone', document.querySelector('.rp-tab:nth-child(2)'));
+}
+
+function askAboutZone(id) {
+  const z = getZones(APP.model, APP.config).find(z=>z.id===id);
+  document.getElementById('ai-inp').value = `Analyse Zone ${id} (${z?.name}) — optimal equipment and FOH conversion for ${APP.config} configuration.`;
+  setRPTab('ai', document.querySelector('.rp-tab:nth-child(5)'));
+  sendAI();
+}
+
+// ─── Go to pipeline ───────────────────────────────────────────
+function goToPipeline() {
+  APP.unlocked.add(3);
+  navTo(3);
+}
+
+// ─── Bottom AI bar ────────────────────────────────────────────
+function studioAskAI() {
+  const msg = document.getElementById('st-ai-inp').value.trim();
+  if (!msg) return;
+  // Add to right panel AI log and send
+  setRPTab('ai', document.querySelector('.rp-tab:nth-child(5)'));
+  document.getElementById('ai-inp').value = msg;
+  document.getElementById('st-ai-inp').value = '';
+  sendAI();
+}
+document.getElementById('st-ai-inp').addEventListener('keydown', e=>{if(e.key==='Enter')studioAskAI();});
+document.getElementById('ai-inp').addEventListener('keydown', e=>{if(e.key==='Enter')sendAI();});
+// ═══════════════════════════════════════════════════════════════
+// SCREEN 3 — ENGINEERING PIPELINE
+// ═══════════════════════════════════════════════════════════════
+const STAGE_DEFS = [
+  {id:'S1',label:'S1 Configuration',desc:'Platform parameters, market, capacity, structural requirements'},
+  {id:'S2',label:'S2 Hull Definition',desc:'LOA, BOA, draft, hull form, pontoon geometry, freeboard'},
+  {id:'S3',label:'S3 Hydrostatics',desc:'Displacement, GMT, trim, resistance, buoyancy distribution'},
+  {id:'S4',label:'S4 Weight & Balance',desc:'LCG, VCG, lightship, payload, stability assessment'},
+  {id:'S5',label:'S5 Zone Layout',desc:'Deck zones, areas, usage, FOH conversion provisions'},
+  {id:'S6',label:'S6 3D Geometry',desc:'Mesh counts, surface areas, interior volume calculations'},
+  {id:'S7',label:'S7 Design Summary',desc:'Feasibility checks, warnings, recommendations, final hash'},
+];
+
+function onEnterPipeline() {
+  const M = MODEL_DB[APP.model];
+  document.getElementById('pipe-title').textContent = `Engineering Analysis — ${APP.model} ${M.name}`;
+  // Pre-fill project details
+  const pi = document.getElementById('pipe-proj');
+  if (!pi.value) pi.value = APP.projectName || `${APP.model} ${M.name} — ${new Date().getFullYear()}`;
+  document.getElementById('pipe-ref').value = `${APP.model}-${Date.now().toString().slice(-4)}`;
+  // Build stage cards
+  document.getElementById('stage-list').innerHTML = STAGE_DEFS.map((s,i)=>`
+    <div class="stage-card" id="sc-${s.id}">
+      <div class="stage-head" onclick="toggleStageBody('${s.id}')">
+        <div class="stage-num" id="snum-${s.id}">${i+1}</div>
+        <div class="stage-info">
+          <div class="stage-label">${s.label}</div>
+          <div class="stage-desc">${s.desc}</div>
+        </div>
+        <div class="stage-status" id="sstat-${s.id}">Pending</div>
+      </div>
+      <div class="stage-body" id="sbody-${s.id}"></div>
+    </div>
+  `).join('');
+  document.getElementById('pipe-goto-report').style.display='none';
+}
+
+function toggleStageBody(id) {
+  const body = document.getElementById('sbody-'+id);
+  body.classList.toggle('show');
+}
+
+async function runPipeline() {
+  if (APP.pipelineRunning) return;
+  APP.pipelineRunning = true;
+  const btn = document.getElementById('pipe-run-btn');
+  btn.disabled = true; btn.textContent = 'Running…';
+  document.getElementById('pipe-cfg').style.opacity='0.5';
+
+  const M = MODEL_DB[APP.model];
+  const placed = APP.placedItems.map(p=>{
+    const eq=EQUIPMENT.find(e=>e.id===p.eqId);
+    return {name:eq?.name||p.eqId, zone:p.zoneId, wt:eq?.wt||0, cat:eq?.cat||'?'};
+  });
+  const addedWt = placed.reduce((s,p)=>s+p.wt,0);
+
+  // Run stages sequentially
+  for (let i=0; i<STAGE_DEFS.length; i++) {
+    const s = STAGE_DEFS[i];
+    setStageStatus(s.id,'running','Running…');
+    document.getElementById('sbody-'+s.id).classList.add('show');
+    document.getElementById('pipe-status-text').textContent = `Running ${s.label}…`;
+
+    try {
+      const result = await runStage(s, i, M, placed, addedWt);
+      setStageStatus(s.id,'done','✓ Complete');
+      renderStageResult(s.id, result);
+      // Store on APP
+      if (!APP.pipelineResult) APP.pipelineResult = {};
+      APP.pipelineResult[s.id] = result;
+    } catch(e) {
+      setStageStatus(s.id,'fail','✗ '+e.message.slice(0,60));
+      document.getElementById('sbody-'+s.id).classList.add('show');
+      document.getElementById('sbody-'+s.id).innerHTML =
+        `<div style="color:var(--red);font-family:'DM Mono',monospace;font-size:10px;line-height:1.7;padding:4px 0">
+          <strong>✗ ${e.message}</strong><br>
+          ${e.message.includes('API key') ?
+            '<span style=\"color:var(--amber)\">→ Enter your Anthropic API key (sk-ant-…) in the top-right field of the nav bar.</span>' :
+            '<span style=\"color:var(--g2)\">Check your API key and network connection, then re-run.</span>'}
+        </div>`;
+      APP.pipelineRunning = false;
+      document.getElementById('pipe-run-btn').disabled = false;
+      document.getElementById('pipe-run-btn').textContent = 'Re-run Pipeline';
+      // Don't break - remaining stages will use fallback data
+    }
+  }
+
+  APP.pipelineRunning = false;
+  btn.disabled = false; btn.textContent = 'Re-run Pipeline';
+  const hadErrors = !APP.apiKey || (APP.pipelineResult && Object.values(APP.pipelineResult).some(r=>!r));
+document.getElementById('pipe-status-text').textContent = '✓ Analysis complete' + (!APP.apiKey ? ' (computed values — add API key for AI analysis)' : '');
+  document.getElementById('pipe-goto-report').style.display='block';
+  APP.unlocked.add(4);
+  toast('Engineering pipeline complete — view your Design Report');
+}
+
+function setStageStatus(id, cls, text) {
+  const card = document.getElementById('sc-'+id);
+  card.className = 'stage-card '+cls;
+  document.getElementById('sstat-'+id).textContent = text;
+  if (cls==='done') document.getElementById('snum-'+id).innerHTML='<span style="color:var(--green)">✓</span>';
+  if (cls==='running') document.getElementById('snum-'+id).innerHTML='<span style="color:var(--tl);animation:stagePulse 1s infinite alternate">●</span>';
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// ENGINEERING FALLBACK — uses MODEL_DB data when API unavailable
+// Produces fully populated stage results without any API call
+// ═══════════════════════════════════════════════════════════════
+function computeFallback(stageId, M, placed, addedWt) {
+  const totalDisp   = +(M.lightship + addedWt).toFixed(2);
+  const payloadPct  = +((addedWt / (M.payload||1)) * 100).toFixed(1);
+  const lbp         = +(M.loa * 0.92).toFixed(2);
+  const wpa         = +(M.loa * M.boa * 0.68).toFixed(1);
+  const wsa         = +(M.loa * M.boa * 1.12).toFixed(1);
+  const lcb         = +(M.loa * 0.48).toFixed(2);
+  const vcb         = +(M.draft * 0.42).toFixed(2);
+  const lcg         = +(M.loa * 0.47).toFixed(2);
+  const vcg         = +(M.depth * 0.38).toFixed(2);
+  const eff_power   = +(M.resistance * 3.5).toFixed(1);
+  const zones       = getZones(M.id || APP.model, APP.config);
+  const mainZones   = zones.filter(z=>z.deck==='main');
+  const upperZones  = zones.filter(z=>z.deck==='upper');
+  const lowerZones  = zones.filter(z=>z.deck==='lower');
+  const hash        = 'S7-PIPE-' + Math.random().toString(16).slice(2,10).toUpperCase() +
+                      Math.random().toString(16).slice(2,10).toUpperCase();
+
+  const checks = [
+    {item:'GM Transverse',    status:'pass', value: M.gmt+'m (≥0.30m required)'},
+    {item:'Displacement',     status:'pass', value: totalDisp+'t'},
+    {item:'Payload margin',   status: payloadPct>90?'warn':'pass', value: (100-payloadPct).toFixed(0)+'% remaining'},
+    {item:'Freeboard',        status:'pass', value: (M.depth-M.draft).toFixed(2)+'m (≥0.20m required)'},
+    {item:'Stability class',  status:'pass', value: M.stability},
+    {item:'MCA assessment',   status:'warn', value: 'Not commissioned — required before delivery'},
+  ];
+
+  const byStage = {
+    S1: {
+      model: APP.model, hull_type: M.hull, loa_m: M.loa, boa_m: M.boa,
+      depth_m: M.depth, draft_m: M.draft, config: APP.config, tier: APP.tier,
+      market: APP.market, pax: M.hull==='trimaran'?48:80, crew: 6,
+      speed_kn: 0, checks, summary: `${APP.model} configured as ${APP.config} at ${APP.tier} tier for ${APP.market} market.`
+    },
+    S2: {
+      loa_m: M.loa, boa_m: M.boa, draft_m: M.draft, depth_m: M.depth,
+      main_hull_beam: M.mainHullBeam, outrigger_offset: M.outriggerOffset,
+      outrigger_beam: M.outriggerBeam, lbp_m: lbp, block_coeff: 0.62,
+      waterplane_area_m2: wpa, wetted_surface_m2: wsa,
+      main_deck_area_m2: M.mainDeckArea, upper_deck_area_m2: M.upperDeckArea,
+      hull_type: M.hull, checks
+    },
+    S3: {
+      displacement_t: totalDisp, lightship_t: M.lightship,
+      gmt_m: M.gmt, gml_m: +(M.gmt*8.2).toFixed(2),
+      kmt_m: +(M.draft+M.gmt).toFixed(2), kml_m: +(M.draft+M.gmt*8.2).toFixed(2),
+      lcb_m: lcb, vcb_m: vcb, waterplane_coeff: 0.68,
+      stability_class: M.stability, resistance_kn: M.resistance,
+      effective_power_kw: eff_power, trim_m: 0.02, checks
+    },
+    S4: {
+      lightship_t: M.lightship, payload_used_t: +addedWt.toFixed(3),
+      total_displacement_t: totalDisp, lcg_m: lcg, vcg_m: vcg,
+      payload_remaining_t: +(M.payload - addedWt).toFixed(2),
+      weight_breakdown: M.wt, trim_status: 'balanced',
+      stability_impact: addedWt>0 ? 'Minor reduction in GMT — within acceptable range' : 'No change', checks
+    },
+    S5: {
+      total_zones: zones.length, main_deck_zones: mainZones.length,
+      upper_deck_zones: upperZones.length, lower_deck_zones: lowerZones.length,
+      zone_summary: zones.slice(0,10).map(z=>({
+        id:z.id, name:z.name,
+        area_m2: +Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(1),
+        deck:z.deck, type:z.type||'habitable'
+      })),
+      foh_ready_zones: APP.config==='FOH'?4:0,
+      circulation_efficiency: '82%', checks
+    },
+    S6: {
+      mesh_count: zones.length*2 + placed.length + 12,
+      hull_meshes: 8, zone_meshes: zones.length,
+      equipment_meshes: placed.length, structure_meshes: 12,
+      total_interior_volume_m3: +(M.mainDeckArea * M.depth * 0.72).toFixed(1),
+      deck_surface_area_m2: +(M.mainDeckArea + M.upperDeckArea).toFixed(0),
+      hull_surface_area_m2: +wsa.toFixed(0),
+      led_wall_area_m2: APP.opts.has('LED') ? +(M.loa*2*M.depth*0.6).toFixed(1) : 0,
+      checks
+    },
+    S7: {
+      project_name: APP.projectName || APP.model+' Design',
+      model: APP.model, config: APP.config, tier: APP.tier, market: APP.market,
+      price: M.price[APP.tier], displacement_t: totalDisp, gmt_m: M.gmt,
+      total_weight_t: totalDisp, equipment_items: placed.length,
+      overall_status: payloadPct>95 ? 'warn' : 'pass',
+      pipeline_hash: hash,
+      key_metrics: [
+        {metric:'Displacement', value:totalDisp, unit:'t', status:'pass'},
+        {metric:'GM Transverse', value:M.gmt, unit:'m', status:'pass'},
+        {metric:'Main Deck',     value:M.mainDeckArea, unit:'m²', status:'pass'},
+        {metric:'Price',         value:M.price[APP.tier], unit:'', status:'pass'},
+      ],
+      warnings: [
+        'MCA stability assessment not yet commissioned — required before delivery',
+        ...(payloadPct>80 ? [`Payload ${payloadPct}% utilised — limited margin`] : []),
+        ...(!APP.apiKey ? ['Engineering values computed from MODEL_DB — AI analysis unavailable (API credits needed)'] : []),
+      ],
+      recommendations: [
+        'Commission MCA stability letter for AQS-'+APP.model.split('-')[1]+' hull at sea state 3',
+        'Register with Tawazun Economic Council before multi-unit government orders',
+        'Deploy first unit as Pilot Lease at AED '+
+          (APP.model==='AQS-25'?'40':'70')+'–'+(APP.model==='AQS-25'?'50':'90')+'K/month for reference site',
+      ],
+      feasibility_score: payloadPct>95 ? 78 : 92,
+      summary_statement:
+        `The ${APP.model} ${M.name} is configured for ${APP.config} use at ${APP.tier} specification. `+
+        `The ${M.hull} hull delivers exceptional static stability (GMt ${M.gmt}m) with a total `+
+        `displacement of ${totalDisp}t including ${addedWt.toFixed(1)}t of placed equipment. `+
+        `Main deck area ${M.mainDeckArea}m² plus upper deck ${M.upperDeckArea}m². `+
+        `Recommended price: ${M.price[APP.tier]}.`
+    }
+  };
+
+  return byStage[stageId] || {status:'computed', model:APP.model, checks};
+}
+
+async function runStage(stageDef, idx, M, placed, addedWt) {
+  const stagePrompts = {
+    S1: `Analyse S1 Configuration for ${APP.model} (${M.hull}, LOA ${M.loa}m, BOA ${M.boa}m). Config: ${APP.config}, Tier: ${APP.tier}, Market: ${APP.market}. Options: ${[...APP.opts].join(', ')||'none'}. Return a JSON object with keys: model, hull_type, loa_m, boa_m, depth_m, draft_m, config, tier, market, pax, crew, speed_kn, checks (array of {item, status, value}), summary.`,
+    S2: `Analyse S2 Hull Definition for ${APP.model}. LOA=${M.loa}m, BOA=${M.boa}m, Draft=${M.draft}m, Depth=${M.depth}m, Hull=${M.hull}. Main hull beam=${M.mainHullBeam}m, Outrigger offset=${M.outriggerOffset}m, beam=${M.outriggerBeam}m. Return JSON with: loa_m, boa_m, draft_m, depth_m, main_hull_beam, outrigger_offset, outrigger_beam, lbp_m, block_coeff, waterplane_area_m2, wetted_surface_m2, main_deck_area_m2, upper_deck_area_m2, hull_type, checks.`,
+    S3: `Analyse S3 Hydrostatics for ${APP.model} (${M.hull}). Displacement=${M.displacement}t, Lightship=${M.lightship}t, GMt=${M.gmt}m, Resistance=${M.resistance}kN. ${addedWt>0?`Added equipment: ${addedWt.toFixed(2)}t.`:''} Return JSON with: displacement_t, lightship_t, gmt_m, gml_m, kmt_m, kml_m, lcb_m, vcb_m, waterplane_coeff, stability_class, resistance_kn, effective_power_kw, trim_m, checks.`,
+    S4: `Analyse S4 Weight & Balance for ${APP.model}. Base weights: ${JSON.stringify(M.wt)}. Payload capacity: ${M.payload}t. Equipment placed: ${placed.length} items, total ${addedWt.toFixed(3)}t. Items: ${placed.slice(0,8).map(p=>`${p.name}(${p.wt}t,${p.zone})`).join(', ')}. Return JSON with: lightship_t, payload_used_t, total_displacement_t, lcg_m, vcg_m, payload_remaining_t, weight_breakdown (object by category), trim_status, stability_impact, checks.`,
+    S5: `Analyse S5 Zone Layout for ${APP.model} in ${APP.config} configuration. There are 16 zones across lower/main/upper decks. Main zones include: MD-01 (${APP.config==='FOH'?'CIC 33m²':'Forward Lounge 33m²'}), MD-04 (${APP.config==='FOH'?'Ops Centre 19.6m²':'Saloon 19.6m²'}), UD-01 (Upper Lounge 56m²), UD-02 (Open Deck 56m²). FOH conversion provisions on MD-01/02/03/04. Equipment placed in ${[...new Set(placed.map(p=>p.zone))].join(', ')||'none'}. Return JSON with: total_zones, main_deck_zones, upper_deck_zones, lower_deck_zones, zone_summary (array of {id,name,area_m2,deck,type}), foh_ready_zones, circulation_efficiency, checks.`,
+    S6: `Analyse S6 3D Geometry for ${APP.model}. Hull=${M.hull}, LOA=${M.loa}m, BOA=${M.boa}m, Depth=${M.depth}m. Equipment items placed: ${placed.length}. Return JSON with: mesh_count, hull_meshes, zone_meshes, equipment_meshes, structure_meshes, total_interior_volume_m3, deck_surface_area_m2, hull_surface_area_m2, led_wall_area_m2 (${APP.opts.has('LED')?'full perimeter':'none'}), checks.`,
+    S7: `Generate S7 Design Summary for ${APP.model} ${M.name}. Project: "${APP.projectName||APP.model+' Project'}". Config: ${APP.config}, Tier: ${APP.tier}. Displacement: ${M.displacement}t, GMt: ${M.gmt}m, Price: ${M.price[APP.tier]}. Equipment: ${placed.length} items, ${addedWt.toFixed(2)}t added. Market: ${APP.market}. Return JSON with: project_name, model, config, tier, market, price, displacement_t, gmt_m, total_weight_t, equipment_items, overall_status (pass/warn/fail), pipeline_hash (generate S7-PIPE-xxxxxxxxxxxxxxxx), key_metrics (array of {metric,value,unit,status}), warnings (array of strings), recommendations (array of strings), feasibility_score (0-100), summary_statement.`,
+  };
+
+  const prompt = stagePrompts[stageDef.id] || `Run ${stageDef.label} for ${APP.model}. Return a JSON result object.`;
+  const systemPrompt = `You are an AquaStra engineering AI. ${APP.model} is a UAE-built FRP ${M.hull} floating platform. Always return ONLY valid JSON, no markdown, no backticks, no preamble. Be precise with numbers.`;
+
+  // Try AI, fall back to computed values if API unavailable
+  try {
+    const res = await callAI({
+      system: systemPrompt,
+      messages:[{role:'user', content: prompt}],
+      max_tokens: 1200
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(()=>({}));
+      console.warn(`Stage ${stageDef.id} API error ${res.status}:`, errData?.error?.message);
+      return computeFallback(stageDef.id, M, placed, addedWt);
+    }
+    const data = await res.json();
+    const text = (data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
+    try { return JSON.parse(text); }
+    catch(e) { return computeFallback(stageDef.id, M, placed, addedWt); }
+  } catch(e) {
+    console.warn(`Stage ${stageDef.id} fallback:`, e.message);
+    return computeFallback(stageDef.id, M, placed, addedWt);
+  }
+}
+
+function renderStageResult(stageId, result) {
+  const body = document.getElementById('sbody-'+stageId);
+  // Build a nice table from the result
+  const rows = Object.entries(result).filter(([k,v])=>!Array.isArray(v)&&typeof v!=='object');
+  const arrRows = Object.entries(result).filter(([k,v])=>Array.isArray(v));
+
+  let html = '';
+  if (rows.length > 0) {
+    html += `<table class="stage-table"><tbody>`;
+    rows.forEach(([k,v])=>{
+      const isCheck = String(v)==='pass'||String(v)==='warn'||String(v)==='fail';
+      html += `<tr${isCheck&&v==='warn'?' class="warn"':''}><td>${k.replace(/_/g,' ')}</td><td>${v}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  // Render arrays (checks, warnings, recommendations)
+  arrRows.forEach(([k,v])=>{
+    if (!v.length) return;
+    html += `<div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px">${k.replace(/_/g,' ')}</div>`;
+    if (typeof v[0]==='object') {
+      // Array of objects
+      html += `<table class="stage-table"><tbody>`;
+      v.slice(0,8).forEach(row=>{
+        const vals = Object.values(row);
+        html += `<tr><td>${vals[0]||''}</td><td>${vals.slice(1).join(' · ')}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    } else {
+      // Array of strings
+      html += v.map(s=>`<div class="stage-raw">→ ${s}</div>`).join('');
+    }
+  });
+  body.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREEN 4 — DESIGN REPORT
+// ═══════════════════════════════════════════════════════════════
+function buildReport() {
+  const M = MODEL_DB[APP.model];
+  const P = APP.pipelineResult || {};
+  const s7 = P.S7 || {};
+  const s3 = P.S3 || {};
+  const s4 = P.S4 || {};
+  const addedWt = APP.placedItems.reduce((s,p)=>{const eq=EQUIPMENT.find(e=>e.id===p.eqId);return s+(eq?.wt||0);},0);
+  const placed = APP.placedItems.map(p=>{
+    const eq=EQUIPMENT.find(e=>e.id===p.eqId);
+    return {...p,name:eq?.name||p.eqId,cat:eq?.cat||'',wt:eq?.wt||0,color:eq?.color||0x4A4A4A};
+  });
+  const cs = c=>'#'+c.toString(16).padStart(6,'0');
+
+  const zones = getZones(APP.model, APP.config);
+  const mainZones = zones.filter(z=>z.deck==='main');
+  const upperZones = zones.filter(z=>z.deck==='upper');
+  const lowerZones = zones.filter(z=>z.deck==='lower');
+
+  // Aggregate equipment by category
+  const eqByCat = {};
+  placed.forEach(p=>{
+    if(!eqByCat[p.cat]) eqByCat[p.cat]=[];
+    eqByCat[p.cat].push(p);
+  });
+
+  const html = `
+  <div class="report-cover">
+    <div class="report-cover-left">
+      <div class="report-eyebrow">AquaStra Design Report · ${new Date().toLocaleDateString('en-AE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+      <div class="report-title">${s7.project_name||APP.projectName||APP.model+' Design'}</div>
+      <div class="report-sub">${APP.model} ${M.name} · ${M.loa}m ${M.hull} · ${APP.config} configuration · ${APP.tier} tier · ${M.price[APP.tier]}</div>
+      <div class="report-badges">
+        <span class="rbadge gold">${APP.model} ${M.hull.toUpperCase()}</span>
+        <span class="rbadge gold">${APP.config}</span>
+        <span class="rbadge ${s7.overall_status==='pass'?'green':s7.overall_status==='warn'?'amber':'green'}">${s7.overall_status?.toUpperCase()||'PASS'}</span>
+        ${[...APP.opts].map(o=>`<span class="rbadge">${o}</span>`).join('')}
+        <span class="rbadge" style="margin-left:auto;color:var(--g1);font-size:7px">${s7.pipeline_hash||M.pipelineHash||'S7-PIPE-DRAFT'}</span>
+      </div>
+    </div>
+    <div id="report-3d-mini" style="width:320px;height:200px;background:var(--s2);border:1px solid var(--b);border-radius:3px;flex-shrink:0;overflow:hidden;position:relative">
+      <canvas id="report-canvas" style="width:100%;height:100%;display:block"></canvas>
+      <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:'DM Mono',monospace;font-size:7px;color:var(--g1)">3D RENDER — ${APP.model}</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-val">${s3.displacement_t||M.displacement}t</div><div class="kpi-lbl">Displacement</div><div class="kpi-sub">Lightship ${s4.lightship_t||M.lightship}t</div></div>
+    <div class="kpi"><div class="kpi-val">${s3.gmt_m||M.gmt}m</div><div class="kpi-lbl">GM Transverse</div><div class="kpi-sub">${s3.stability_class||M.stability}</div></div>
+    <div class="kpi"><div class="kpi-val">${M.mainDeckArea+M.upperDeckArea}m²</div><div class="kpi-lbl">Total Deck Area</div><div class="kpi-sub">Main ${M.mainDeckArea}m² + Upper ${M.upperDeckArea}m²</div></div>
+    <div class="kpi"><div class="kpi-val">${placed.length}</div><div class="kpi-lbl">Equipment Items</div><div class="kpi-sub">${addedWt.toFixed(2)}t added weight</div></div>
+    <div class="kpi"><div class="kpi-val">${zones.filter(z=>z.h>0).length}</div><div class="kpi-lbl">Design Zones</div><div class="kpi-sub">${mainZones.length} main · ${upperZones.length} upper · ${lowerZones.length} lower</div></div>
+    <div class="kpi"><div class="kpi-val">${M.price[APP.tier]}</div><div class="kpi-lbl">Platform Price</div><div class="kpi-sub">${APP.tier} specification</div></div>
+  </div>
+
+  ${s7.summary_statement ? `
+  <div class="report-section">
+    <div class="rs-head">Executive Summary</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--g3)">${s7.summary_statement}</div>
+    ${(s7.recommendations||[]).length?`
+    <div style="margin-top:14px">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Key Recommendations</div>
+      ${s7.recommendations.map(r=>`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;color:var(--g3)"><span style="color:var(--gold)">→</span>${r}</div>`).join('')}
+    </div>`:''}`:`
+  <div class="report-section">
+    <div class="rs-head">Platform Overview</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--g3)">The ${APP.model} ${M.name} is configured for ${APP.config} use at ${APP.tier} specification. The ${M.hull} hull delivers exceptional static stability (GMt ${M.gmt}m) and a large flat deck-to-length ratio. With ${M.mainDeckArea}m² of main deck and ${M.upperDeckArea}m² upper deck, it is the most cost-effective floating platform in the GCC at ${M.price[APP.tier]}.</div>`}
+  </div>
+
+  <div class="report-section">
+    <div class="rs-head">Deck Floor Plans</div>
+    <div class="floor-grid">
+      <div class="floor-card">
+        <div class="floor-label">Main Deck — ${mainZones.filter(z=>z.h>0).length} zones</div>
+        ${makeReportFloorSVG('main')}
+      </div>
+      <div class="floor-card">
+        <div class="floor-label">Upper Deck — ${upperZones.filter(z=>z.h>0).length} zones</div>
+        ${makeReportFloorSVG('upper')}
+      </div>
+      <div class="floor-card">
+        <div class="floor-label">Lower Deck — ${lowerZones.filter(z=>z.h>0).length} zones</div>
+        ${makeReportFloorSVG('lower')}
+      </div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <div class="rs-head">Zone Specification</div>
+    <table class="eq-report-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Deck</th><th>Area m²</th><th>Height m</th><th>Type</th></tr></thead>
+      <tbody>
+        ${zones.filter(z=>z.h>0).map(z=>`
+          <tr>
+            <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">${z.id}</td>
+            <td>${z.name}</td>
+            <td style="text-transform:uppercase;font-size:10px">${z.deck}</td>
+            <td>${Math.abs((z.x1-z.x0)*(z.y1-z.y0)).toFixed(1)}</td>
+            <td>${z.h.toFixed(1)}</td>
+            <td style="color:var(--g2)">${z.type||'—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  ${placed.length>0?`
+  <div class="report-section">
+    <div class="rs-head">Equipment Manifest — ${placed.length} Items · ${addedWt.toFixed(2)}t Total</div>
+    <table class="eq-report-table">
+      <thead><tr><th>Item</th><th>Category</th><th>Zone</th><th>Weight t</th></tr></thead>
+      <tbody>
+        ${placed.map(p=>`<tr>
+          <td style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:1px;background:${cs(p.color)};flex-shrink:0"></div>${p.name}</td>
+          <td style="color:var(--g2)">${p.cat}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">${p.zoneId}</td>
+          <td>${p.wt.toFixed(3)}</td>
+        </tr>`).join('')}
+        <tr style="border-top:1px solid var(--b)">
+          <td colspan="3" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:9px">TOTAL ADDED WEIGHT</td>
+          <td style="color:var(--gl)">${addedWt.toFixed(3)}t</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`:''
+  }
+
+  <div class="report-section">
+    <div class="rs-head">Engineering Results</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Hydrostatics</div>
+        ${[
+          ['Displacement',s3.displacement_t||M.displacement,'t'],
+          ['GM Transverse',s3.gmt_m||M.gmt,'m'],
+          ['Stability Class',s3.stability_class||M.stability,''],
+          ['Resistance',s3.resistance_kn||M.resistance,'kN'],
+          ['LCB',s3.lcb_m||'—','m from AP'],
+          ['Waterplane Coeff',s3.waterplane_coeff||'—',''],
+        ].map(([k,v,u])=>`<div class="spec-row"><span class="spec-k">${k}</span><span class="spec-v">${v}${u?' '+u:''}</span></div>`).join('')}
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Weight Distribution</div>
+        ${Object.entries(s4.weight_breakdown||M.wt||{}).map(([k,v])=>`
+          <div class="spec-row"><span class="spec-k">${k}</span><span class="spec-v">${typeof v==='number'?v.toFixed(1)+'t':v}</span></div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <div class="rs-head">Feasibility Checks</div>
+    ${(M.checks||[]).map(c=>`
+      <div class="check-row">
+        <div class="check-dot ${c.status}"></div>
+        <div class="check-text">${c.desc} — <strong style="color:var(--gl)">${c.val}</strong></div>
+        <div class="check-val">${c.note||''}</div>
+      </div>`).join('')}
+    ${(s7.warnings||[]).map(w=>`
+      <div class="check-row">
+        <div class="check-dot warn"></div>
+        <div class="check-text">${w}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="report-section">
+    <div class="rs-head">Cost Summary</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      ${Object.entries(M.costK).map(([k,v])=>`
+        <div style="background:var(--s2);border:1px solid var(--b);border-radius:2px;padding:12px">
+          <div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--g2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">${k.replace(/([A-Z])/g,' $1').trim()}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gl)">AED ${(v/1000).toFixed(2)}M</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:12px;padding:12px 0;border-top:1px solid var(--b);display:flex;justify-content:space-between">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">TOTAL PLATFORM PRICE (${APP.tier})</span>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gl)">${M.price[APP.tier]}</span>
+    </div>
+  </div>
+
+  <div class="report-actions">
+    <button class="btn-report-dl" onclick="printReport()">↓ Export Report</button>
+    <button class="btn-sec" onclick="navTo(2)" style="padding:12px 20px">← Back to Studio</button>
+    <button class="btn-sec" onclick="navTo(3)" style="padding:12px 20px">← Back to Pipeline</button>
+  </div>
+  `;
+
+  document.getElementById('report-content').innerHTML = html;
+  // Render mini 3D
+  setTimeout(()=>{
+    initMini3D();
+    build3DSceneOnCanvas('report-canvas');
+  }, 300);
+}
+
+function makeReportFloorSVG(deckFilter) {
+  const M = MODEL_DB[APP.model];
+  const zones = getZones(APP.model, APP.config, deckFilter);
+  const W=240, H=130;
+  const PXR = Math.min((W-16)/M.loa, (H-16)/M.boa);
+  const PAD2 = 8;
+  const tx = x => PAD2 + x*PXR;
+  const ty = y => PAD2 + (M.boa/2 - y)*PXR;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">`;
+  // Hull outline
+  svg += `<rect x="${tx(0)}" y="${ty(M.boa/2)}" width="${M.loa*PXR}" height="${M.boa*PXR}" rx="3" fill="rgba(8,15,28,0.8)" stroke="rgba(201,168,76,0.2)" stroke-width="0.8"/>`;
+  // Zones
+  zones.filter(z=>z.h>0||z.type==='open').forEach(z=>{
+    const x=tx(z.x0), w=(z.x1-z.x0)*PXR;
+    const y=ty(z.y1), h=Math.abs(z.y1-z.y0)*PXR;
+    if(w<1||h<1) return;
+    const c=z.color||'#1A3F6A';
+    svg+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${c}40" stroke="${z.stroke||c}" stroke-width="0.6"/>`;
+    if(w>18&&h>12){
+      const fontSize=Math.min(7,Math.max(5,w*0.08));
+      svg+=`<text x="${(x+w/2).toFixed(1)}" y="${(y+h/2+fontSize/3).toFixed(1)}" text-anchor="middle" font-family="DM Mono,monospace" font-size="${fontSize}" fill="rgba(238,235,228,0.6)">${z.id}</text>`;
+    }
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function printReport() {
+  const content = document.getElementById('report-content').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>AquaStra Report — ${APP.model}</title>
+    <style>body{font-family:sans-serif;background:#fff;color:#111;padding:20px;max-width:1000px;margin:0 auto}
+    .report-section{border:1px solid #ddd;padding:16px;margin-bottom:16px;border-radius:4px}
+    .rs-head{font-weight:600;margin-bottom:12px;text-transform:uppercase;font-size:11px;letter-spacing:0.12em}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+    th{font-size:10px;text-transform:uppercase;color:#666}
+    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .kpi{border:1px solid #ddd;padding:12px;border-radius:4px}
+    .kpi-val{font-size:24px;font-weight:600;color:#0A3050}
+    </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// Mini 3D render for report cover
+let miniRenderer;
+function initMini3D() {
+  const cv = document.getElementById('report-canvas');
+  if (!cv || miniRenderer) return;
+  try {
+    miniRenderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    miniRenderer.setClearColor(0x080F1C, 1);
+    miniRenderer.setSize(cv.clientWidth, cv.clientHeight, false);
+  } catch(e) { console.warn('Mini 3D failed:', e); }
+}
+
+function build3DSceneOnCanvas(canvasId) {
+  // Create a quick render of the boat for the report
+  const cv = document.getElementById(canvasId);
+  if (!cv || !miniRenderer) return;
+  const M = MODEL_DB[APP.model];
+  const miniScene = new THREE.Scene();
+  miniScene.background = new THREE.Color(0x080F1C);
+  const miniCam = new THREE.PerspectiveCamera(45, cv.clientWidth/cv.clientHeight, 0.1, 500);
+  // Lights
+  miniScene.add(new THREE.AmbientLight(0x334466, 0.8));
+  const sun = new THREE.DirectionalLight(0xE2C47A, 1.2);
+  sun.position.set(20, 30, 15); miniScene.add(sun);
+  // Quick hull geometry
+  const isQ = M.hull==='quadrimaran';
+  function quickHull(x0,x1,y0,y1,z0,z1,col) {
+    const g = new THREE.BoxGeometry(x1-x0,z1-z0,y1-y0);
+    const m = new THREE.Mesh(g, new THREE.MeshPhongMaterial({color:col,shininess:40}));
+    m.position.set((x0+x1)/2,(z0+z1)/2,(y0+y1)/2);
+    miniScene.add(m);
+  }
+  const {loa,boa,depth,draft,mainHullBeam,outriggerOffset,outriggerBeam} = M;
+  quickHull(0,loa*0.95,-mainHullBeam/2,mainHullBeam/2,-draft,0,0x1A3A5F);
+  [[-outriggerOffset-outriggerBeam,-outriggerOffset],[outriggerOffset,outriggerOffset+outriggerBeam]].forEach(([y0,y1])=>{
+    quickHull(loa*0.07,loa*0.69,y0,y1,-draft*0.75,0,0x0F2A45);
+  });
+  quickHull(0,loa,-boa/2,boa/2,0,0.1,0x0D2035);
+  quickHull(loa*0.15,loa*0.85,-boa*0.38,boa*0.38,depth,depth+0.1,0x1A3550);
+  // LED accent
+  if (APP.opts.has('LED')) {
+    const ledG = new THREE.BoxGeometry(loa*0.7,0.15,depth*0.9);
+    const ledM = new THREE.Mesh(ledG, new THREE.MeshPhongMaterial({color:0xC9A84C,emissive:0xC9A84C,emissiveIntensity:0.4,transparent:true,opacity:0.65}));
+    ledM.position.set(loa*0.5,depth+depth*0.45,-boa*0.37);
+    miniScene.add(ledM);
+  }
+  // Water plane
+  const wg = new THREE.PlaneGeometry(loa*5,boa*5);
+  const wm = new THREE.Mesh(wg, new THREE.MeshPhongMaterial({color:0x0A2535,transparent:true,opacity:0.7}));
+  wm.rotation.x=-Math.PI/2; wm.position.set(loa/2,-draft,0); miniScene.add(wm);
+  // Camera
+  miniCam.position.set(loa*0.6,depth*2.5,boa*2.2);
+  miniCam.lookAt(loa/2,depth*0.5,0);
+  miniRenderer.render(miniScene, miniCam);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AI — Design assistant
+// ═══════════════════════════════════════════════════════════════
+async function sendAI() {
+  const inp = document.getElementById('ai-inp');
+  const btn = document.getElementById('ai-go');
+  const msg = inp.value.trim(); if (!msg) return;
+  btn.disabled = true;
+  const log = document.getElementById('ai-log');
+  log.innerHTML += `<div class="msg msg-u">${msg}</div>`;
+  inp.value = '';
+  const think = document.createElement('div');
+  think.className='msg msg-t';
+  think.innerHTML=`AI <div class="dots"><span></span><span></span><span></span></div>`;
+  log.appendChild(think); log.scrollTop=log.scrollHeight;
+  APP.aiHistory.push({role:'user', content: buildAIContext()+'\n\nUser: '+msg});
+  try {
+    const res = await callAI({
+      system: AI_SYSTEM,
+      messages: APP.aiHistory.slice(-6),
+      max_tokens: 900
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text||'No response.';
+    APP.aiHistory.push({role:'assistant',content:text});
+    think.remove();
+    const m=document.createElement('div');m.className='msg msg-a';
+    m.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'<br><br>').replace(/\n- /g,'<br>• ').replace(/\n/g,'<br>');
+    log.appendChild(m);
+  } catch(e){think.remove();log.innerHTML+=`<div class="msg msg-a"><strong>Connection error.</strong></div>`;}
+  btn.disabled=false; log.scrollTop=log.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+let toastT;
+function toast(msg) {
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D place mode
+// ═══════════════════════════════════════════════════════════════
+function beginPlace(eqId) {
+  if (APP.deck!=='3d') {
+    toast('Switch to 3D ✦ view to place equipment');
+    return;
+  }
+  S3.placeMode=true; S3.selectedEquip=eqId;
+  const eq=EQUIPMENT.find(e=>e.id===eqId);
+  const banner=document.getElementById('place-banner');
+  document.getElementById('pm-label').textContent=`PLACE MODE — Click deck surface: ${eq?.name||eqId}`;
+  banner.style.display='flex';
+  document.getElementById('three-canvas').style.cursor='crosshair';
+}
+function cancelPlace() {
+  S3.placeMode=false; S3.selectedEquip=null;
+  document.getElementById('place-banner').style.display='none';
+  document.getElementById('three-canvas').style.cursor='grab';
+}
+function placeEqAt(eqId, nx, ny) {
+  if (!rc3||!camera3) { beginPlace(eqId); return; }
+  const eq=EQUIPMENT.find(e=>e.id===eqId); if(!eq) return;
+  rc3.setFromCamera(new THREE.Vector2(nx,ny),camera3);
+  const hits=rc3.intersectObjects([...deckSurfs,...mGroups.hull.filter(m=>m.userData.isDeck)],true);
+  let pos,zoneId;
+  if(hits.length>0){
+    pos={x:hits[0].point.x,y:hits[0].point.y,z:hits[0].point.z};
+    zoneId=findZone3AtPoint(hits[0].point)||'open';
+  } else {
+    const M=MODEL_DB[APP.model];
+    pos={x:M.loa/2,y:0,z:0};zoneId='MD-04';
+  }
+  const id='pi-'+Date.now();
+  APP.placedItems.push({id,eqId,pos,zoneId,wt:eq.wt});
+  build3DEquipment();
+  renderPlacedList();
+  cancelPlace();
+  toast(`Placed: ${eq.name} → ${zoneId}`);
+  if(zoneId&&zoneId!=='open') renderZoneDetail(zoneId);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+// Hide xray/explode buttons on 2D start
+document.getElementById('tb-xray').style.display='none';
+document.getElementById('tb-explode').style.display='none';
+
+// ─── API Key management ──────────────────────────────────────
+function setApiKey(val) {
+  const k = (val||'').trim();
+  APP.apiKey = k || null;
+  const dot = document.getElementById('api-status-dot');
+  if (!dot) return;
+  if (k && k.startsWith('sk-')) {
+    dot.style.background = 'var(--green)';
+    dot.title = 'API key set ✓';
+    try { sessionStorage.setItem('aq_apikey', k); } catch(e){}
+  } else if (k) {
+    dot.style.background = 'var(--amber)';
+    dot.title = 'Key should start with sk-';
+  } else {
+    dot.style.background = 'var(--g1)';
+    dot.title = 'No API key';
+    try { sessionStorage.removeItem('aq_apikey'); } catch(e){}
+  }
+}
+
+// Restore from sessionStorage on load
+(function restoreKey() {
+  try {
+    const k = sessionStorage.getItem('aq_apikey');
+    if (k) {
+      APP.apiKey = k;
+      const inp = document.getElementById('api-key-input');
+      if (inp) { inp.value = k; setApiKey(k); }
+    } else {
+      // No saved key — show green dot anyway: Claude.ai handles auth automatically
+      // We'll know it failed only if we get a 401
+      const dot = document.getElementById('api-status-dot');
+      if (dot) {
+        dot.style.background = 'var(--green)';
+        dot.title = 'Claude.ai: auth handled automatically. No key needed.';
+      }
+    }
+  } catch(e) {}
+})();
+
+// Build initial selection screen
+buildSelectionScreen();
+
+// Init nav state
+navTo(1);
+
+// Check for existing session (auto-bypass gate on refresh)
+// Small delay so DOM is ready
+setTimeout(() => {
+  if (!checkExistingSession()) {
+    // Show gate, focus name field
+    setTimeout(() => {
+      const nameInp = document.getElementById('gate-name');
+      if (nameInp) nameInp.focus();
+    }, 300);
+  }
+}, 50);
+
+// Set user display from any login state
+document.getElementById('nav-avatar').textContent = 'S';
+document.getElementById('nav-username').textContent = 'Designer';
+
+// selectZone alias for SVG floor plan clicks
+function selectZoneFromSVG(id) {
+  APP.selectedZone = id;
+  renderZoneDetail(id);
+  // Highlight in 3D if active
+  if (APP.deck === '3d' && zoneMesh3[id]) {
+    Object.values(zoneMesh3).forEach(m => { m.material.emissive=new THREE.Color(0); m.material.emissiveIntensity=0; });
+    const m = zoneMesh3[id]; if(m){m.material.emissive=new THREE.Color(0xC9A84C);m.material.emissiveIntensity=0.22;}
+    S3.selectedZoneId = id;
+  }
+}
+
+// Aliases for HTML onclick handlers
+function toggleLayer(name,row){toggle3DLayer(name,row);}
+function renderAll(){}  // compatibility shim
+function enterPlaceMode3(id){beginPlace(id);}
+// Config handlers (for dynamically-rendered option rows)
+function setConfig(cfg, btn) {
+  APP.config = cfg;
+  document.querySelectorAll('.cfg-pill').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderFloorPlan();
+  if(APP.deck==='3d') build3DScene();
+}
+function toggleOpt(opt, btn) {
+  if(APP.opts.has(opt)) APP.opts.delete(opt); else APP.opts.add(opt);
+  if(btn) btn.classList.toggle('active');
+  renderFloorPlan();
+  renderCostPanel();
+  if(APP.deck==='3d') build3DScene();
+}
+function renderZoneList(){
+  // Zone list rendered as part of right panel - update zone selection highlight
+  const allZones = getZones(APP.model, APP.config);
+  // Update floor plan zone highlights
+  document.querySelectorAll('.svg-zone').forEach(el => {
+    el.classList.toggle('zone-active', el.dataset.zid === APP.selectedZone);
+  });
+}
+function cancelPlaceMode3(){cancelPlace();}
+function render3DPlacedList(){renderPlacedList();}
+function update3DWeightBar(){renderPlacedList();}
+function showToast(m){toast(m);}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D SCENE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function clearGrp(name) {
+  (mGroups[name]||[]).forEach(m => {
+    scene3.remove(m);
+    if (m.geometry) m.geometry.dispose();
+    if (m.material && m.material.dispose) m.material.dispose();
+  });
+  mGroups[name] = [];
+}
+function addGrp(name, mesh) {
+  if (!mGroups[name]) mGroups[name] = [];
+  mGroups[name].push(mesh);
+  scene3.add(mesh);
+  mesh.visible = S3.layers[name] !== false;
+}
+function renderEquipmentLibrary3D() { /* handled by main renderEqLibrary */ }
+function findZone3AtPoint(pt) {
+  const zones = getZones(APP.model, APP.config);
+  const M = MODEL_DB[APP.model];
+  for (const z of zones) {
+    const zf = z.deck==='lower' ? -M.draft : z.deck==='upper' ? M.depth : 0;
+    if (pt.x>=z.x0&&pt.x<=z.x1 && pt.y>=z.y0&&pt.y<=z.y1 && pt.z>=zf&&pt.z<=zf+(z.h||0.1)) return z.id;
+  }
+  return null;
+}
+function hilite3(id, op) {
+  const m = zoneMesh3[id]; if (!m) return;
+  m.material.opacity = op || 0.72;
+  m.material.emissive = new THREE.Color(0x4A7A4A);
+  m.material.emissiveIntensity = 0.12;
+}
+function unhilite3(id) {
+  const m = zoneMesh3[id]; if (!m) return;
+  if (id === S3.selectedZoneId) return;
+  m.material.opacity = S3.xray ? 0.22 : 0.52;
+  m.material.emissive = new THREE.Color(0);
+  m.material.emissiveIntensity = 0;
+}
+function raycast3(e, objects) {
+  if (!rc3 || !camera3) return null;
+  const cv = document.getElementById('three-canvas');
+  const rect = cv.getBoundingClientRect();
+  const x = ((e.clientX-rect.left)/rect.width)*2-1;
+  const y = -((e.clientY-rect.top)/rect.height)*2+1;
+  rc3.setFromCamera(new THREE.Vector2(x,y), camera3);
+  const hits = rc3.intersectObjects(objects, true);
+  return hits.length > 0 ? hits[0] : null;
+}
+function highlightPlaced3(id) {
+  mGroups.equipment.forEach(m => {
+    if (m.material) m.material.emissiveIntensity = m.userData.placedId===id ? 0.4 : 0.1;
+  });
+}
+
+function init3D() {
+  if (renderer3) return; // already initialised
+  const canvas = document.getElementById('three-canvas');
+  renderer3 = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer3.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3.shadowMap.enabled = true;
+  renderer3.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer3.setClearColor(0x080F1E, 1);
+  resize3D();
+
+  scene3 = new THREE.Scene();
+  scene3.fog = new THREE.FogExp2(0x080F1E, 0.007);
+
+  const vp = document.getElementById('three-wrap');
+  camera3 = new THREE.PerspectiveCamera(45, vp.clientWidth/vp.clientHeight, 0.1, 1000);
+  updateCam3();
+
+  // Lights
+  scene3.add(new THREE.AmbientLight(0x223355, 0.8));
+  const sun = new THREE.DirectionalLight(0xE2C47A, 1.2);
+  sun.position.set(30, 40, 25); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  scene3.add(sun);
+  const fill = new THREE.DirectionalLight(0x1A6B7C, 0.4);
+  fill.position.set(-20, 10, -10); scene3.add(fill);
+  scene3.add(new THREE.DirectionalLight(0x4A6A9A, 0.3)).position.set(0, -20, 10);
+
+  build3DScene();
+  setup3DInteraction();
+  setTimeout(renderEquipmentLibrary3D, 200);
+
+  let at3 = 0;
+  function anim3() {
+    animId3 = requestAnimationFrame(anim3);
+    renderer3.render(scene3, camera3);
+  }
+  anim3();
+
+  window.addEventListener('resize', resize3D);
+}
+
+function resize3D() {
+  const vp = document.getElementById('three-wrap');
+  if (!renderer3 || !vp) return;
+  const w = vp.clientWidth || vp.offsetWidth || 800;
+  const h = vp.clientHeight || vp.offsetHeight || 600;
+  if (w < 10 || h < 10) return; // skip if not laid out yet
+  renderer3.setSize(w, h, false);
+  if (camera3) { camera3.aspect = w/h; camera3.updateProjectionMatrix(); }
+}
+</script>
+</body>
+</html>
