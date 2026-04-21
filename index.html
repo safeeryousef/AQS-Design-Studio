@@ -637,6 +637,141 @@ input,textarea{cursor:text;}
   .step-num { width: 18px; height: 18px; font-size: 8px; }
   .step-logo-text { font-size: 13px; }
 }
+
+/* ─── 3D ASSET MANAGER ─── */
+#asset-panel {
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(5,9,15,0.96); backdrop-filter:blur(20px);
+  display:none; flex-direction:column;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#asset-panel.open{display:flex;}
+.asset-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;border-bottom:1px solid var(--b);flex-shrink:0;
+}
+.asset-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--w);}
+.asset-title em{color:var(--gold);font-style:normal;}
+.asset-close{padding:8px 16px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--g2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;cursor:pointer;transition:all .15s;}
+.asset-close:hover{border-color:var(--bb);color:var(--w);}
+.asset-body{display:flex;flex:1;overflow:hidden;}
+.asset-sidebar{
+  width:260px;flex-shrink:0;border-right:1px solid var(--b);
+  overflow-y:auto;padding:16px;
+}
+.asset-model-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--b);
+  border-radius:3px;padding:12px 14px;margin-bottom:8px;cursor:pointer;
+  transition:all .18s;
+}
+.asset-model-card:hover{border-color:var(--bb);}
+.asset-model-card.active{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.asset-model-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);margin-bottom:2px;letter-spacing:0.1em;}
+.asset-model-status{font-size:10px;color:var(--g2);}
+.asset-model-status.loaded{color:var(--green);}
+.asset-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.asset-preview{
+  flex:1;position:relative;min-height:0;background:rgba(8,15,28,0.8);
+}
+#asset-preview-canvas{width:100%;height:100%;display:block;}
+.asset-preview-label{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);
+  background:rgba(5,9,15,0.7);padding:3px 10px;border-radius:2px;
+  letter-spacing:0.1em;text-transform:uppercase;pointer-events:none;
+}
+.asset-controls{
+  padding:16px 20px;border-top:1px solid var(--b);flex-shrink:0;
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+}
+.asset-ctrl-section{grid-column:span 2;}
+.asset-ctrl-section.half{grid-column:span 1;}
+.asset-ctrl-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.asset-drop-zone{
+  border:1px dashed var(--b);border-radius:3px;padding:24px;text-align:center;
+  cursor:pointer;transition:all .2s;position:relative;
+}
+.asset-drop-zone:hover,.asset-drop-zone.drag-over{border-color:var(--gold);background:rgba(201,168,76,0.04);}
+.asset-drop-text{font-size:12px;color:var(--g2);margin-bottom:4px;}
+.asset-drop-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);letter-spacing:0.08em;}
+.asset-file-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.asset-transform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.asset-tf-field label{font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);display:block;margin-bottom:3px;letter-spacing:0.1em;}
+.asset-tf-field input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--b);border-radius:2px;padding:5px 8px;color:var(--w);font-family:'DM Mono',monospace;font-size:10px;text-align:center;transition:border-color .15s;}
+.asset-tf-field input:focus{border-color:var(--gold);outline:none;}
+.asset-action-row{display:flex;gap:8px;margin-top:12px;grid-column:span 2;}
+.btn-asset-apply{padding:10px 20px;background:var(--gold);border:none;border-radius:2px;color:var(--ink);font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+.btn-asset-apply:hover{background:var(--gl);}
+.btn-asset-clear{padding:10px 16px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--g2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;cursor:pointer;transition:all .15s;}
+.btn-asset-clear:hover{border-color:var(--red);color:var(--red);}
+.asset-info-box{background:rgba(26,123,140,0.08);border:1px solid rgba(26,123,140,0.2);border-radius:2px;padding:10px 12px;font-size:10px;color:var(--g3);line-height:1.7;grid-column:span 2;}
+.asset-status-bar{padding:8px 14px;border-top:1px solid var(--b);font-family:'DM Mono',monospace;font-size:9px;color:var(--g2);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.asset-status-dot{width:6px;height:6px;border-radius:50%;background:var(--g1);}
+.asset-status-dot.ok{background:var(--green);}
+.asset-status-dot.loading{background:var(--amber);animation:stagePulse 1s infinite alternate;}
+.asset-status-dot.err{background:var(--red);}
+/* ─── ROI CALCULATOR ─── */
+#s-roi{overflow-y:auto;background:var(--ink);}
+.roi-wrap{max-width:1020px;width:100%;margin:0 auto;padding:36px 24px 80px;}
+.roi-hero{margin-bottom:28px;}
+.roi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.roi-card{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:20px 22px;}
+.roi-card-title{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.roi-field{margin-bottom:13px;}
+.roi-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--g2);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
+.roi-label span{color:var(--gl);font-size:10px;}
+.roi-slider{width:100%;margin:4px 0;}
+.roi-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--b);border-radius:2px;padding:9px 12px;color:var(--w);font-family:'DM Mono',monospace;font-size:11px;transition:border-color .15s;}
+.roi-input:focus{border-color:var(--gold);outline:none;}
+.roi-select{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--b);border-radius:2px;padding:9px 12px;color:var(--w);font-family:'DM Mono',monospace;font-size:10px;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A8090'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.roi-select option{background:var(--n2);}
+.roi-results{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:20px 22px;margin-bottom:20px;}
+.roi-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.roi-kpi{background:var(--s2);border:1px solid var(--b);border-radius:2px;padding:14px 16px;}
+.roi-kpi-val{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gl);margin-bottom:2px;}
+.roi-kpi-lbl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:var(--g1);}
+.roi-kpi-sub{font-size:10px;color:var(--g2);margin-top:2px;}
+.roi-chart-wrap{height:180px;position:relative;margin-bottom:12px;}
+.roi-scenario-toggle{display:flex;gap:6px;margin-bottom:14px;}
+.roi-scn{padding:6px 14px;border:1px solid var(--b);border-radius:2px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g2);cursor:pointer;transition:all .15s;background:transparent;}
+.roi-scn:hover{border-color:var(--bb);color:var(--w);}
+.roi-scn.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);}
+.roi-table{width:100%;border-collapse:collapse;font-size:11px;}
+.roi-table th{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g1);padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;}
+.roi-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--g3);}
+.roi-table tr:hover td{background:rgba(255,255,255,0.02);}
+.roi-table td:first-child{color:var(--g2);}
+.roi-table td.hi{color:var(--gl);}
+.roi-table td.warn{color:var(--amber);}
+.roi-actions{display:flex;gap:10px;}
+
+/* ─── MAP PANEL ─── */
+#map-panel,#foh-panel,#versions-panel{position:fixed;inset:0;z-index:1000;background:rgba(5,9,15,0.97);backdrop-filter:blur(20px);display:none;flex-direction:column;animation:fadeIn .3s ease;}
+#map-panel.open,#foh-panel.open,#versions-panel.open{display:flex;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--b);flex-shrink:0;}
+.panel-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--w);}
+.panel-title em{color:var(--gold);font-style:normal;}
+.panel-close{padding:7px 14px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--g2);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;transition:all .15s;}
+.panel-close:hover{border-color:var(--bb);color:var(--w);}
+.panel-body{display:flex;flex:1;overflow:hidden;}
+.panel-sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--b);overflow-y:auto;padding:12px;}
+#adn-map{flex:1;background:var(--s2);}
+.adn-loc-card{background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:3px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.adn-loc-card:hover{border-color:var(--bb);}
+/* FOH panel */
+.foh-zone-card{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:14px 16px;margin-bottom:10px;}
+.foh-cfg-opt{border:1px solid var(--b);border-radius:2px;padding:9px 10px;cursor:pointer;transition:all .15s;}
+.foh-cfg-opt:hover{border-color:var(--bb);}
+.foh-cfg-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.foh-total-bar{background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:14px 18px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+.foh-total-item{text-align:center;}
+.foh-total-val{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gl);}
+.foh-total-lbl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:var(--g1);}
+/* Versions panel */
+.version-card{background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:3px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.version-card:hover{border-color:var(--bb);}
+.version-card.current{border-color:rgba(76,172,124,0.4);}
 </style>
 </head>
 <body>
@@ -715,9 +850,35 @@ input,textarea{cursor:text;}
       <div class="step-num" id="sn-4">4</div>
       <div class="step-label">Design Report</div>
     </div>
+    <div class="step-arrow">→</div>
+    <div class="step" id="nav-5" onclick="navTo(5)" style="cursor:pointer">
+      <div class="step-num" id="sn-5">5</div>
+      <div class="step-label">ROI Calculator</div>
+    </div>
   </div>
   <div class="step-right">
     <div style="display:flex;align-items:center;gap:8px;margin-right:8px">
+      <button onclick="openVersionsPanel()" 
+        style="padding:5px 10px;background:transparent;border:1px solid var(--b);border-radius:2px;
+               color:var(--g2);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.08em;
+               cursor:pointer;transition:all .15s;white-space:nowrap"
+        onmouseover="this.style.borderColor='var(--bb)';this.style.color='var(--w)'"
+        onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'"
+        title="Design version history">⎙ Versions</button>
+      <button onclick="openMapPanel()"
+        style="padding:5px 10px;background:transparent;border:1px solid var(--b);border-radius:2px;
+               color:var(--g2);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.08em;
+               cursor:pointer;transition:all .15s;white-space:nowrap"
+        onmouseover="this.style.borderColor='var(--bb)';this.style.color='var(--w)'"
+        onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'"
+        title="ADN deployment network map">⊕ ADN Map</button>
+      <button onclick="openAssetPanel()" id="btn-asset-mgr"
+        style="padding:5px 12px;background:transparent;border:1px solid var(--b);border-radius:2px;
+               color:var(--g2);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;
+               cursor:pointer;transition:all .15s;white-space:nowrap;display:none"
+        onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+        onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'"
+        title="Load custom 3D hull files (admin only)">⬡ 3D Assets</button>
       <div id="api-status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--g1);flex-shrink:0" title="API key — not needed inside Claude.ai. Required for standalone use."></div>
       <input id="api-key-input" type="password"
         placeholder="sk-ant-… (optional in Claude.ai)"
@@ -831,9 +992,19 @@ input,textarea{cursor:text;}
     <div id="st-toolbar">
       <div id="deck-tabs"></div>
       <div class="tb-sep"></div>
+      <button class="tb-btn" id="tb-foh-btn" onclick="openFOHPanel()" style="display:none">⬡ FOH Config</button>
       <button class="tb-btn" id="tb-xray" onclick="toggle3DXray()">X-Ray</button>
       <button class="tb-btn" id="tb-explode" onclick="toggle3DExplode()">Explode</button>
       <div class="tb-sep"></div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button onclick="openAssetPanel()" id="btn-asset-studio"
+          style="display:none;padding:4px 10px;background:transparent;border:1px solid var(--b);
+                 border-radius:2px;color:var(--g2);font-family:'DM Mono',monospace;font-size:7px;
+                 letter-spacing:0.1em;cursor:pointer;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+          onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g2)'"
+          title="Load custom 3D hull file">⬡ Load 3D</button>
+      </div>
       <div class="tb-meta">
         <div class="tb-stat">Model <span id="tb-model">—</span></div>
         <div class="tb-stat">Config <span id="tb-config">—</span></div>
@@ -900,6 +1071,7 @@ input,textarea{cursor:text;}
     <div id="st-aibar">
       <input id="st-ai-inp" placeholder="Ask the Design AI — e.g. 'Optimise Zone D for FOH' · 'Weight impact of LED walls' · 'Best layout for AQS-35 resort'"/>
       <button class="ai-send" id="st-ai-go" onclick="studioAskAI()">Ask AI ▶</button>
+      <button class="btn-sec" onclick="saveVersion()" style="flex-shrink:0" title="Save design snapshot">⎙ Save</button>
       <button class="btn-sec" onclick="saveDesignToURL()" style="flex-shrink:0" title="Copy shareable link to this design">Share ↗</button>
       <button class="btn-sec" onclick="goToPipeline()" style="flex-shrink:0">Run Engineering →</button>
     </div>
@@ -996,6 +1168,116 @@ input,textarea{cursor:text;}
   <div class="report-wrap" id="report-content">
     <!-- Generated dynamically -->
     <div style="text-align:center;padding:60px;color:var(--g2);font-size:14px">Complete the engineering pipeline to generate your report</div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 5: OPERATOR ROI CALCULATOR ═══════════════════ -->
+<div class="screen" id="s-roi">
+  <div class="roi-wrap">
+    <div class="roi-hero">
+      <div class="pipe-eyebrow">Operator ROI Calculator</div>
+      <div class="pipe-title">Financial model for operators &amp; investors</div>
+      <div class="pipe-sub">Adjust inputs to model payback period, IRR, and monthly EBITDA — domestic base case + full recovery upside</div>
+    </div>
+
+    <div class="roi-grid">
+      <!-- Left: inputs -->
+      <div>
+        <div class="roi-card">
+          <div class="roi-card-title">Platform &amp; configuration</div>
+          <div class="roi-field">
+            <div class="roi-label">Model <span id="roi-model-price">AED 2.0M</span></div>
+            <select class="roi-select" id="roi-model" onchange="roiUpdate()">
+              <option value="AQS-25">AQS-25 Hub — AED 2.0–2.5M</option>
+              <option value="AQS-35">AQS-35 Residence — AED 4.2–5.5M</option>
+              <option value="AQS-40">AQS-40 Lagoon — AED 5.5–7.2M</option>
+              <option value="AQS-45">AQS-45 Terrace — AED 6.5–8.5M</option>
+              <option value="AQS-50">AQS-50 Pavilion — AED 9.0–12.0M</option>
+            </select>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Fit-out tier</div>
+            <select class="roi-select" id="roi-tier" onchange="roiUpdate()">
+              <option value="Standard">Standard</option>
+              <option value="Premium" selected>Premium</option>
+              <option value="Luxury">Luxury</option>
+            </select>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Commercial structure</div>
+            <select class="roi-select" id="roi-structure" onchange="roiUpdate()">
+              <option value="outright">Outright purchase</option>
+              <option value="pilot">Pilot Lease (6 months → buy)</option>
+              <option value="lease5">Lease-to-own (5 years)</option>
+              <option value="revshare">Revenue share (AquaStra owns)</option>
+            </select>
+          </div>
+          <div class="roi-field" id="roi-pilot-rate-field" style="display:none">
+            <div class="roi-label">Pilot lease rate / month <span id="roi-pilot-rate-val">AED 45K</span></div>
+            <input type="range" class="roi-slider" id="roi-pilot-rate" min="25" max="120" value="45" step="1" oninput="roiUpdate()"/>
+          </div>
+        </div>
+
+        <div class="roi-card" style="margin-top:12px">
+          <div class="roi-card-title">Operating assumptions</div>
+          <div class="roi-field">
+            <div class="roi-label">Domestic nightly rate (AED) <span id="roi-rate-val">1,800</span></div>
+            <input type="range" class="roi-slider" id="roi-rate" min="800" max="8000" value="1800" step="50" oninput="roiUpdate()"/>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Full recovery rate (AED) <span id="roi-recov-val">2,800</span></div>
+            <input type="range" class="roi-slider" id="roi-recov" min="1000" max="12000" value="2800" step="100" oninput="roiUpdate()"/>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Base occupancy % <span id="roi-occ-val">62%</span></div>
+            <input type="range" class="roi-slider" id="roi-occ" min="30" max="95" value="62" step="1" oninput="roiUpdate()"/>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Recovery occupancy % <span id="roi-occ2-val">72%</span></div>
+            <input type="range" class="roi-slider" id="roi-occ2" min="40" max="98" value="72" step="1" oninput="roiUpdate()"/>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Operating cost ratio % <span id="roi-opex-val">47%</span></div>
+            <input type="range" class="roi-slider" id="roi-opex" min="30" max="70" value="47" step="1" oninput="roiUpdate()"/>
+          </div>
+          <div class="roi-field">
+            <div class="roi-label">Years to full recovery <span id="roi-recov-yr-val">2</span></div>
+            <input type="range" class="roi-slider" id="roi-recov-yr" min="1" max="5" value="2" step="1" oninput="roiUpdate()"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: results -->
+      <div>
+        <div class="roi-results">
+          <div class="roi-scenario-toggle">
+            <button class="roi-scn on" id="roi-scn-base" onclick="setRoiScenario('base',this)">Base (domestic)</button>
+            <button class="roi-scn" id="roi-scn-recov" onclick="setRoiScenario('recov',this)">Full recovery</button>
+            <button class="roi-scn" id="roi-scn-blend" onclick="setRoiScenario('blend',this)">Blended 10yr</button>
+          </div>
+          <div class="roi-kpi-grid">
+            <div class="roi-kpi"><div class="roi-kpi-val" id="roi-kpi-payback">—</div><div class="roi-kpi-lbl">Payback years</div><div class="roi-kpi-sub" id="roi-kpi-payback-sub"></div></div>
+            <div class="roi-kpi"><div class="roi-kpi-val" id="roi-kpi-irr">—</div><div class="roi-kpi-lbl">10yr IRR</div><div class="roi-kpi-sub" id="roi-kpi-irr-sub"></div></div>
+            <div class="roi-kpi"><div class="roi-kpi-val" id="roi-kpi-ebitda">—</div><div class="roi-kpi-lbl">Annual EBITDA</div><div class="roi-kpi-sub" id="roi-kpi-ebitda-sub">AED / year</div></div>
+            <div class="roi-kpi"><div class="roi-kpi-val" id="roi-kpi-yield">—</div><div class="roi-kpi-lbl">Gross yield</div><div class="roi-kpi-sub" id="roi-kpi-yield-sub">On platform cost</div></div>
+          </div>
+          <div style="position:relative;height:160px;margin-bottom:10px">
+            <canvas id="roi-chart" role="img" aria-label="10-year cumulative cash flow chart"></canvas>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:14px">Year-by-year breakdown</div>
+          <div style="overflow-x:auto">
+            <table class="roi-table"><thead><tr><th>Year</th><th>Revenue</th><th>EBITDA</th><th>Cumulative cash</th><th>vs cost</th></tr></thead>
+            <tbody id="roi-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="roi-actions">
+          <button class="btn-go" onclick="roiToPDF()">↓ Download ROI Sheet</button>
+          <button class="btn-sec" onclick="sendToProposal()" style="padding:12px 18px">Use in Proposal →</button>
+          <button class="btn-sec" onclick="navTo(1)" style="padding:12px 18px">← Back</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1152,6 +1434,15 @@ function gatePass(session) {
   setTimeout(() => { gate.style.display = 'none'; }, 500);
 
   toast('Welcome, ' + session.name.split(' ')[0] + ' · ' + session.label);
+  // Show 3D Assets button for admin role
+  const assetBtn = document.getElementById('btn-asset-mgr');
+  if (assetBtn && session.role === 'Admin') {
+    assetBtn.style.display = 'block';
+  }
+  const assetStudioBtn = document.getElementById('btn-asset-studio');
+  if (assetStudioBtn && session.role === 'Admin') {
+    assetStudioBtn.style.display = 'block';
+  }
 }
 
 function checkExistingSession() {
@@ -1549,6 +1840,25 @@ function build3DWater(M) {
 
 // ── HULL (extruded shaped geometry) ───────────────────────────
 function build3DHull(M) {
+  // Check for custom asset first — use it instead of procedural
+  const customAsset = CUSTOM_ASSETS[APP.model];
+  if (customAsset?.group) {
+    const clone = customAsset.group.clone(true);
+    clone.userData.isCustomHull = true;
+    addGrp('hull', clone);
+    // Also add a transparent bounding box so deckSurfs work for equipment placement
+    const box = new THREE.Box3().setFromObject(clone);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const centre = new THREE.Vector3(); box.getCenter(centre);
+    const phantomGeo = new THREE.BoxGeometry(size.x, 0.1, size.z);
+    const phantomMat = new THREE.MeshBasicMaterial({transparent:true, opacity:0, depthWrite:false});
+    const phantom = new THREE.Mesh(phantomGeo, phantomMat);
+    phantom.position.set(centre.x, M.depth + 0.05, centre.z);
+    phantom.userData = {isDeck:true};
+    scene3.add(phantom);
+    deckSurfs.push(phantom);
+    return; // skip procedural hull
+  }
   const isQuad = M.hull === 'quadrimaran';
 
   function makeHullShape(beamHalf, draft) {
@@ -2279,7 +2589,7 @@ const APP = {
   user: {name:'Designer', email:''},
   apiKey: (()=>{ try { return sessionStorage.getItem('aq_apikey')||null; } catch(e){return null;} })(),
   screen: 1,
-  unlocked: new Set([1]),
+  unlocked: new Set([1,5]),
   // Selection
   model: 'AQS-25',
   config: 'Hospitality',
@@ -2290,6 +2600,9 @@ const APP = {
   client: '',
   // Studio
   deck: 'main',
+  roiSnapshot: null,    // from ROI calculator
+  fohSelections: null,  // from FOH configurator
+  fohForProposal: false,
   selectedZone: null,
   placedItems: [],
   equivActiveCat: 'All',
@@ -2316,7 +2629,7 @@ const S3 = {xray:false,layers:{hull:true,decks:true,zones:true,structure:true,eq
 function navTo(n) {
   if (!APP.unlocked.has(n)) { toast('Complete previous steps first'); return; }
   // Update stepper
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4,5].forEach(i => {
     const el = document.getElementById('nav-'+i);
     const sn = document.getElementById('sn-'+i);
     el.className = 'step' + (i===n?' active':i<n?' done':APP.unlocked.has(i)?'':' locked');
@@ -2325,7 +2638,7 @@ function navTo(n) {
   });
   // Switch screen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('s-'+['','select','studio','pipeline','report'][n]).classList.add('active');
+  document.getElementById('s-'+['','select','studio','pipeline','report','roi'][n]).classList.add('active');
   APP.screen = n;
   if (n===2) onEnterStudio();
   if (n===3) onEnterPipeline();
@@ -2449,6 +2762,9 @@ function onEnterStudio() {
   const M = MODEL_DB[APP.model];
   document.getElementById('tb-model').textContent = APP.model;
   document.getElementById('tb-config').textContent = APP.config;
+  // Show FOH config button only in FOH mode
+  const fohBtn = document.getElementById('tb-foh-btn');
+  if (fohBtn) fohBtn.style.display = APP.config === 'FOH' ? '' : 'none';
   document.getElementById('tb-loa').textContent = M.loa+'m';
   document.getElementById('tb-gmt').textContent = M.gmt+'m';
   document.getElementById('tb-disp').textContent = M.displacement+'t';
@@ -2463,6 +2779,9 @@ function onEnterStudio() {
     renderFloorPlan();
   });
   buildStudioSwitchers();
+  // Sync ROI calculator model if on that screen
+  const roiModelSel = document.getElementById('roi-model');
+  if (roiModelSel) { roiModelSel.value = APP.model; }
 }
 
 function buildStudioSwitchers() {
@@ -3344,6 +3663,7 @@ function buildReport() {
 
   <div class="report-actions">
     <button class="btn-report-dl" onclick="downloadPDF()" id="btn-pdf">↓ Download PDF</button>
+    <button class="btn-report-dl" onclick="generateProposal()" id="btn-proposal" style="background:var(--teal);color:var(--w)">↓ Download Proposal</button>
     <button class="btn-report-dl" style="background:var(--n4);color:var(--w);border:1px solid var(--b)" onclick="printReport()">⎙ Print</button>
     <button class="btn-sec" onclick="saveDesignToURL()" style="padding:12px 20px">↗ Share Link</button>
     <button class="btn-sec" onclick="navTo(2)" style="padding:12px 20px">← Studio</button>
@@ -3872,6 +4192,21 @@ function setApiKey(val) {
 }
 
 // Restore from sessionStorage on load
+// Restore asset metadata notes (not the 3D data — that must be re-uploaded)
+(function restoreAssetMeta() {
+  try {
+    const meta = JSON.parse(localStorage.getItem('aq_asset_meta')||'{}');
+    Object.entries(meta).forEach(([model, m]) => {
+      // We can't restore the 3D data itself from localStorage (too large)
+      // But we can store a placeholder so the UI shows the file was previously loaded
+      if (MODEL_DB[model] && m.filename) {
+        // Mark as "previously loaded, needs re-upload"
+        CUSTOM_ASSETS[model] = { group: null, meta: m, needsReupload: true };
+      }
+    });
+  } catch(e) {}
+})();
+
 (function restoreKey() {
   try {
     const k = sessionStorage.getItem('aq_apikey');
@@ -3928,8 +4263,1274 @@ function selectZoneFromSVG(id) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FEATURE 1: OPERATOR ROI CALCULATOR
+// ═══════════════════════════════════════════════════════════════
+let roiScenario = 'base';
+let roiChartInstance = null;
+
+function setRoiScenario(s, btn) {
+  roiScenario = s;
+  document.querySelectorAll('.roi-scn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  roiUpdate();
+}
+
+function roiUpdate() {
+  const modelKey = document.getElementById('roi-model').value;
+  const tier = document.getElementById('roi-tier').value;
+  const structure = document.getElementById('roi-structure').value;
+  const M = MODEL_DB[modelKey];
+  if (!M) return;
+
+  // Parse price from MODEL_DB
+  const priceStr = M.price[tier]; // e.g. 'AED 2.2M'
+  const priceK = parseFloat(priceStr.replace(/[^0-9.]/g,'')) * 1000; // in AED thousands
+  document.getElementById('roi-model-price').textContent = priceStr;
+
+  // Show/hide pilot rate field
+  const pilotField = document.getElementById('roi-pilot-rate-field');
+  pilotField.style.display = structure === 'pilot' ? 'block' : 'none';
+
+  // Read sliders
+  const rateBase   = parseInt(document.getElementById('roi-rate').value);
+  const rateRecov  = parseInt(document.getElementById('roi-recov').value);
+  const occBase    = parseInt(document.getElementById('roi-occ').value) / 100;
+  const occRecov   = parseInt(document.getElementById('roi-occ2').value) / 100;
+  const opexRatio  = parseInt(document.getElementById('roi-opex').value) / 100;
+  const recovYear  = parseInt(document.getElementById('roi-recov-yr').value);
+  const pilotRate  = parseInt(document.getElementById('roi-pilot-rate').value);
+
+  // Update display labels
+  document.getElementById('roi-rate-val').textContent   = rateBase.toLocaleString();
+  document.getElementById('roi-recov-val').textContent  = rateRecov.toLocaleString();
+  document.getElementById('roi-occ-val').textContent    = Math.round(occBase*100)+'%';
+  document.getElementById('roi-occ2-val').textContent   = Math.round(occRecov*100)+'%';
+  document.getElementById('roi-opex-val').textContent   = Math.round(opexRatio*100)+'%';
+  document.getElementById('roi-recov-yr-val').textContent = recovYear;
+  document.getElementById('roi-pilot-rate-val').textContent = 'AED '+pilotRate+'K';
+
+  // Annual revenue calc
+  const revBase  = rateBase  * occBase  * 365;
+  const revRecov = rateRecov * occRecov * 365;
+
+  // Structure-adjusted cost basis
+  let costBasis = priceK * 1000; // full AED
+  let annualPmt = 0;
+  if (structure === 'pilot') {
+    // 6-month pilot lease then purchase: pilot revenue + purchase
+    const pilotRevenue = pilotRate * 1000 * 6;
+    costBasis = (priceK * 1000) - pilotRevenue; // net cost after pilot income
+  } else if (structure === 'lease5') {
+    annualPmt = priceK * 1000 * 0.225; // ~22.5% per year
+    costBasis = annualPmt; // annual cash outlay
+  } else if (structure === 'revshare') {
+    // AquaStra owns, operator pays 20% gross revenue
+    costBasis = 0; // operator has no capex
+  }
+
+  // Build 10-year cash flow
+  const years = [];
+  let cumCash = structure === 'revshare' ? 0 : -Math.abs(costBasis);
+  let paybackYear = null;
+
+  for (let yr = 1; yr <= 10; yr++) {
+    const isRecov = yr >= recovYear;
+    let rate = roiScenario === 'recov' ? rateRecov :
+               roiScenario === 'base'  ? rateBase :
+               (yr < recovYear ? rateBase : rateRecov); // blend
+    let occ  = roiScenario === 'recov' ? occRecov :
+               roiScenario === 'base'  ? occBase :
+               (yr < recovYear ? occBase : occRecov);
+
+    const grossRev = rate * occ * 365;
+    let ebitda;
+    if (structure === 'revshare') {
+      ebitda = grossRev * 0.20; // operator pays 20% to AquaStra but operator gets 80%
+    } else if (structure === 'lease5') {
+      ebitda = grossRev * (1 - opexRatio) - annualPmt;
+    } else {
+      ebitda = grossRev * (1 - opexRatio);
+    }
+
+    const prevCum = cumCash;
+    cumCash += ebitda;
+    if (paybackYear === null && cumCash >= 0 && structure !== 'revshare') paybackYear = yr;
+
+    years.push({
+      yr, grossRev: Math.round(grossRev),
+      ebitda: Math.round(ebitda),
+      cumCash: Math.round(cumCash),
+      pct: costBasis > 0 ? Math.round((cumCash / costBasis) * 100) : null
+    });
+  }
+
+  // IRR approximation (simple NPV bisection)
+  function calcIRR(flows) {
+    let lo = -0.5, hi = 5.0;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo+hi)/2;
+      const npv = flows.reduce((s, f, t) => s + f / Math.pow(1+mid, t), 0);
+      if (npv > 0) lo = mid; else hi = mid;
+    }
+    return (lo+hi)/2;
+  }
+
+  let cashFlows;
+  if (structure === 'revshare') {
+    cashFlows = [0, ...years.map(y => y.ebitda)];
+  } else {
+    cashFlows = [-Math.abs(costBasis), ...years.map(y => y.ebitda)];
+  }
+  const irr = calcIRR(cashFlows);
+
+  // KPIs
+  const yr1 = years[0];
+  const grossYield = costBasis > 0 ? (yr1.grossRev / Math.abs(costBasis) * 100) : 0;
+  const ebitdaYield = costBasis > 0 ? (yr1.ebitda / Math.abs(costBasis) * 100) : 0;
+
+  document.getElementById('roi-kpi-payback').textContent = paybackYear ? paybackYear : structure === 'revshare' ? 'N/A' : '>10';
+  document.getElementById('roi-kpi-payback-sub').textContent = paybackYear ? 'years to break even' : structure === 'revshare' ? 'no capex' : 'beyond 10yr horizon';
+  document.getElementById('roi-kpi-irr').textContent = isFinite(irr) && irr > -0.5 ? (irr*100).toFixed(1)+'%' : '—';
+  document.getElementById('roi-kpi-irr-sub').textContent = '10-year horizon';
+  document.getElementById('roi-kpi-ebitda').textContent = 'AED '+(yr1.ebitda/1000).toFixed(0)+'K';
+  document.getElementById('roi-kpi-yield').textContent = grossYield > 0 ? grossYield.toFixed(1)+'%' : 'N/A';
+
+  // Table
+  document.getElementById('roi-table-body').innerHTML = years.map((y,i) => {
+    const isBreak = y.cumCash >= 0 && (i === 0 || years[i-1].cumCash < 0);
+    return `<tr${isBreak?' style="border-top:1px solid var(--green)"':''}>
+      <td>Y${y.yr}${y.yr === recovYear ? ' ★' : ''}</td>
+      <td>AED ${(y.grossRev/1000).toFixed(0)}K</td>
+      <td class="${y.ebitda>=0?'hi':'warn'}">AED ${(y.ebitda/1000).toFixed(0)}K</td>
+      <td class="${y.cumCash>=0?'hi':'warn'}">AED ${(y.cumCash/1000).toFixed(0)}K</td>
+      <td class="${y.pct!==null&&y.pct>=100?'hi':''}">${y.pct !== null ? y.pct+'%' : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Chart — load Chart.js lazily
+  renderROIChart(years, costBasis);
+}
+
+function renderROIChart(years, costBasis) {
+  if (typeof Chart === 'undefined') {
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js').then(()=>renderROIChart(years,costBasis));
+    return;
+  }
+  const ctx = document.getElementById('roi-chart');
+  if (!ctx) return;
+  if (roiChartInstance) { roiChartInstance.destroy(); roiChartInstance = null; }
+  const labels = years.map(y => 'Y'+y.yr);
+  const cumData = years.map(y => Math.round(y.cumCash/1000));
+  const ebitdaData = years.map(y => Math.round(y.ebitda/1000));
+  roiChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'EBITDA (AED K)', data: ebitdaData, backgroundColor:'rgba(26,123,140,0.5)', borderColor:'#1A7B8C', borderWidth:1, order:2 },
+        { label:'Cumulative (AED K)', data: cumData, type:'line', borderColor:'#C9A84C', backgroundColor:'rgba(201,168,76,0.08)', borderWidth:2, pointRadius:3, fill:true, tension:0.3, order:1 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'#7A8090', font:{size:9} }, grid:{ color:'rgba(255,255,255,0.04)' } },
+        y:{ ticks:{ color:'#7A8090', font:{size:9}, callback:v=>'AED '+(v>=0?'+':'')+v+'K' }, grid:{ color:'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+function roiToPDF() {
+  const modelKey = document.getElementById('roi-model').value;
+  const tier = document.getElementById('roi-tier').value;
+  const M = MODEL_DB[modelKey];
+  // Build a simple printable version
+  const rows = document.getElementById('roi-table-body').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>AquaStra ROI — ${modelKey} ${tier}</title>
+    <style>body{font-family:sans-serif;padding:30px;max-width:800px;margin:0 auto;color:#111}
+    h1{font-size:22px;margin-bottom:4px}h2{font-size:14px;color:#666;font-weight:400;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#f0f0f0;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.08em}
+    td{padding:7px 10px;border-bottom:1px solid #eee}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+    .kpi{border:1px solid #ddd;padding:12px;border-radius:4px}
+    .kpi-val{font-size:22px;font-weight:600;color:#0A3050}
+    .kpi-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.06em}
+    footer{margin-top:30px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px}
+    </style></head><body>
+    <h1>AquaStra Operator ROI — ${modelKey} ${M.name}</h1>
+    <h2>${tier} specification · ${M.price[tier]} · ${new Date().toLocaleDateString('en-AE',{day:'2-digit',month:'long',year:'numeric'})}</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-val">${document.getElementById('roi-kpi-payback').textContent}</div><div class="kpi-lbl">Payback years</div></div>
+      <div class="kpi"><div class="kpi-val">${document.getElementById('roi-kpi-irr').textContent}</div><div class="kpi-lbl">10yr IRR</div></div>
+      <div class="kpi"><div class="kpi-val">${document.getElementById('roi-kpi-ebitda').textContent}</div><div class="kpi-lbl">Annual EBITDA</div></div>
+      <div class="kpi"><div class="kpi-val">${document.getElementById('roi-kpi-yield').textContent}</div><div class="kpi-lbl">Gross yield</div></div>
+    </div>
+    <table><thead><tr><th>Year</th><th>Gross Revenue</th><th>EBITDA</th><th>Cumulative</th><th>vs Cost</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <footer>AquaStra Marine Industries · Sharjah, UAE · Confidential · aquastra.ae</footer>
+    </body></html>`);
+  win.document.close(); win.print();
+}
+
+function sendToProposal() {
+  APP.roiSnapshot = {
+    model: document.getElementById('roi-model').value,
+    tier: document.getElementById('roi-tier').value,
+    payback: document.getElementById('roi-kpi-payback').textContent,
+    irr: document.getElementById('roi-kpi-irr').textContent,
+    ebitda: document.getElementById('roi-kpi-ebitda').textContent,
+    yield: document.getElementById('roi-kpi-yield').textContent,
+  };
+  toast('ROI data saved — will appear in proposal');
+  navTo(4); // go to report
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// FEATURE 3: DEPLOYMENT NETWORK MAP (ADN)
+// ═══════════════════════════════════════════════════════════════
+const ADN_LOCATIONS = [
+  { id:'SHJ', name:'Khalid Lagoon, Sharjah', lat:25.354, lng:55.391, country:'UAE',
+    models:['AQS-25','AQS-35'], draft:1.5, authority:'Sharjah Ports + SCAD',
+    status:'ready', statusLabel:'Regulatory pathway confirmed',
+    notes:'AquaStra home base. Sub-threshold direct purchase. Fastest deployment route. Al Khan lagoon as alternative.'},
+  { id:'DXB', name:'Dubai Marina', lat:25.080, lng:55.140, country:'UAE',
+    models:['AQS-25','AQS-35','AQS-45'], draft:2.5, authority:'DMCA',
+    status:'ready', statusLabel:'Classification pathway confirmed',
+    notes:'DTCM flagship location. 3×AQS-25 Premium + 1×AQS-35 proposal. Jumeirah waterfront as alternative.'},
+  { id:'AUH', name:'Yas Marina, Abu Dhabi', lat:24.467, lng:54.608, country:'UAE',
+    models:['AQS-25','AQS-35','AQS-45'], draft:3.0, authority:'ADPORTS',
+    status:'pending', statusLabel:'Engagement required',
+    notes:'DCT Abu Dhabi bridge product to Ramhan Island (2029). 5×AQS-25 Premium proposal. Al Bateen waterfront as alternative.'},
+  { id:'RAK', name:'Al Hamra Marina, RAK', lat:25.690, lng:55.790, country:'UAE',
+    models:['AQS-25','AQS-35'], draft:1.8, authority:'RAK Ports Authority',
+    status:'pending', statusLabel:'Pre-engagement',
+    notes:'Adjacent to Kleindienst demand validation. RAK Tourism Authority 5-unit proposal. Strong coastal infrastructure.'},
+  { id:'MSN', name:'Musandam, Oman', lat:26.198, lng:56.261, country:'Oman',
+    models:['AQS-25','AQS-35'], draft:1.5, authority:'Royal Navy of Oman',
+    status:'future', statusLabel:'Phase 2',
+    notes:'Musandam Peninsula strategic position. FOH Standard for forward patrol base. Shallow coastal access advantage.'},
+  { id:'DQM', name:'Duqm Port, Oman', lat:19.672, lng:57.705, country:'Oman',
+    models:['AQS-25','AQS-35','AQS-45'], draft:3.5, authority:'SEZAD / Royal Navy',
+    status:'future', statusLabel:'Phase 2',
+    notes:'Strategic deep-water port. FOH Full Mission for naval support. EDGE Group export channel potential.'},
+  { id:'JED', name:'Red Sea Project Coast, Saudi Arabia', lat:24.090, lng:38.040, country:'KSA',
+    models:['AQS-25','AQS-35','AQS-45'], draft:2.0, authority:'Saudi Red Sea Authority',
+    status:'pending', statusLabel:'Saudi agent required',
+    notes:'Saudi MOT 10-unit Red Sea Floating Experience. Arab manufacturing origin advantage. SAMI registration required.'},
+  { id:'KHO', name:'NEOM Coast, Saudi Arabia', lat:27.900, lng:35.180, country:'KSA',
+    models:['AQS-35','AQS-45','AQS-50'], draft:2.5, authority:'NEOM / Saudi Red Sea Authority',
+    status:'future', statusLabel:'Phase 3',
+    notes:'$500B programme. Floating infrastructure procurement active. Premium tier. Saudi JV required for manufacturing.'},
+  { id:'ABK', name:'Al Bateen, Abu Dhabi', lat:24.458, lng:54.342, country:'UAE',
+    models:['AQS-25','AQS-35'], draft:1.8, authority:'ADPORTS',
+    status:'pending', statusLabel:'Engagement required',
+    notes:'Alternative to Yas Marina for DCT Abu Dhabi proposal. Protected waters. Good visibility for government flagship unit.'},
+  { id:'SLL', name:'Salalah, Oman', lat:17.015, lng:54.093, country:'Oman',
+    models:['AQS-25','AQS-35'], draft:1.5, authority:'Port of Salalah',
+    status:'future', statusLabel:'Phase 3',
+    notes:'Indian Ocean access point. Tourism and maritime security dual use. Long-term ADN southern anchor.'},
+];
+
+let mapInstance = null;
+let mapLeafletLoaded = false;
+
+function openMapPanel() {
+  const panel = document.getElementById('map-panel');
+  panel.classList.add('open');
+  buildADNList();
+  setTimeout(initMap, 200);
+}
+
+function closeMapPanel() {
+  document.getElementById('map-panel').classList.remove('open');
+}
+
+function buildADNList() {
+  const el = document.getElementById('adn-list');
+  if (!el) return;
+  el.innerHTML = ADN_LOCATIONS.map(loc => {
+    const statusCol = loc.status==='ready'?'var(--green)':loc.status==='pending'?'var(--amber)':'var(--g1)';
+    return `<div class="adn-loc-card" id="adn-${loc.id}" onclick="focusLocation('${loc.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em">${loc.id} · ${loc.country}</div>
+        <div style="width:7px;height:7px;border-radius:50%;background:${statusCol};flex-shrink:0;margin-top:1px"></div>
+      </div>
+      <div style="font-size:11px;color:var(--w);margin-bottom:3px;line-height:1.3">${loc.name}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2)">${loc.statusLabel}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px">${loc.models.map(m=>`<span style="padding:1px 5px;border:1px solid var(--b);border-radius:1px;font-family:'DM Mono',monospace;font-size:7px;color:var(--g2)">${m}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function initMap() {
+  if (mapInstance) { mapInstance.invalidateSize(); return; }
+  const mapEl = document.getElementById('adn-map');
+  if (!mapEl) return;
+
+  // Load Leaflet
+  if (!window.L) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js');
+    // Load Leaflet CSS
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css'; link.rel = 'stylesheet';
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+      document.head.appendChild(link);
+    }
+  }
+
+  await new Promise(r => setTimeout(r, 100)); // wait for CSS
+
+  mapInstance = L.map('adn-map', { zoomControl:true }).setView([24.0, 54.0], 5);
+
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© OpenStreetMap contributors © CARTO',
+    maxZoom:18
+  }).addTo(mapInstance);
+
+  // Add markers
+  ADN_LOCATIONS.forEach(loc => {
+    const col = loc.status==='ready'?'#4CAC7C':loc.status==='pending'?'#C9884C':'#4A5060';
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="width:14px;height:14px;border-radius:50%;background:${col};border:2px solid rgba(255,255,255,0.4);box-shadow:0 0 8px ${col}88;cursor:pointer"></div>`,
+      iconSize:[14,14], iconAnchor:[7,7]
+    });
+    const marker = L.marker([loc.lat, loc.lng], {icon}).addTo(mapInstance);
+    marker.bindPopup(`
+      <div style="font-family:'DM Sans',sans-serif;min-width:220px">
+        <div style="font-weight:600;margin-bottom:4px;color:#0A3050">${loc.name}</div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px">${loc.country} · Draft ≤${loc.draft}m · ${loc.authority}</div>
+        <div style="font-size:11px;margin-bottom:6px">${loc.notes}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px">${loc.models.map(m=>`<span style="padding:1px 6px;background:#e8f4f8;border-radius:2px;font-size:10px;color:#1A5070">${m}</span>`).join('')}</div>
+      </div>`, { maxWidth:260 });
+    marker.on('click', () => highlightADNCard(loc.id));
+  });
+}
+
+function focusLocation(id) {
+  const loc = ADN_LOCATIONS.find(l => l.id === id);
+  if (!loc || !mapInstance) return;
+  mapInstance.flyTo([loc.lat, loc.lng], 8, {duration:1});
+  highlightADNCard(id);
+  // Open popup
+  mapInstance.eachLayer(layer => {
+    if (layer.getLatLng && layer.getLatLng().lat === loc.lat) layer.openPopup();
+  });
+}
+
+function highlightADNCard(id) {
+  document.querySelectorAll('.adn-loc-card').forEach(c => c.style.borderColor='var(--b)');
+  const card = document.getElementById('adn-'+id);
+  if (card) {
+    card.style.borderColor = 'var(--gold)';
+    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+function filterADNStatus(status) {
+  document.querySelectorAll('[onclick^="filterADN"]').forEach(b => b.classList.remove('on'));
+  event.target.classList.add('on');
+  document.querySelectorAll('.adn-loc-card').forEach(card => {
+    const id = card.id.replace('adn-','');
+    const loc = ADN_LOCATIONS.find(l=>l.id===id);
+    card.style.display = (!status || loc.status===status) ? 'block' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FEATURE 4: FOH ZONE CONFIGURATOR
+// ═══════════════════════════════════════════════════════════════
+const FOH_ZONES = {
+  'MD-01': {
+    name:'Zone A — Forward / CIC',
+    hospitality:'Master bedroom suite + en-suite bathroom',
+    configs:{
+      Standard:  { label:'Commander Briefing',  desc:'Secure comms rack, VHF/UHF base station, 6-workstation ops room', deltaK:180, timeWeeks:2 },
+      Enhanced:  { label:'Encrypted C2 Station', desc:'P25/TETRA trunked radio, BGAN satellite terminal, dual display wall', deltaK:320, timeWeeks:3 },
+      FullMission:{ label:'CIC Full Mission',    desc:'Military-grade multi-net C2, HF/VHF/UHF/SAT, Inmarsat Fleet 33, VTC', deltaK:680, timeWeeks:5 },
+    }
+  },
+  'MD-02': {
+    name:'Zone B — Midship Port / Berthing',
+    hospitality:'Guest cabin 1',
+    configs:{
+      Standard:  { label:'6-Bunk Berthing',      desc:'Hot-bunk capable, standard marine mattresses, blackout curtains', deltaK:40, timeWeeks:1 },
+      Enhanced:  { label:'8-Bunk + Lockers',     desc:'8 personnel, individual equipment lockers, marine-grade fitout', deltaK:80, timeWeeks:1 },
+      FullMission:{ label:'12-Bunk SOF Berth',   desc:'12 pax, SOF equipment cage 1.5×2m lockable, weapons locker UAE spec', deltaK:160, timeWeeks:2 },
+    }
+  },
+  'MD-03': {
+    name:'Zone C — Midship Stbd / Medical',
+    hospitality:'Guest cabin 2',
+    configs:{
+      Standard:  { label:'6-Bunk Berthing',       desc:'6 personnel berthing, basic first aid station', deltaK:40, timeWeeks:1 },
+      Enhanced:  { label:'Enhanced Trauma Kit',   desc:'Defibrillator, oxygen supply, IV supplies', deltaK:90, timeWeeks:1 },
+      FullMission:{ label:'2-Stretcher Medical Bay', desc:'Full surgical kit, IV supplies, medevac coordination radio', deltaK:220, timeWeeks:3 },
+    }
+  },
+  'MD-04': {
+    name:'Zone D — Saloon / Ops Centre',
+    hospitality:'Open-plan lounge and dining',
+    configs:{
+      Standard:  { label:'6-Workstation Ops',    desc:'75" display, AIS chart plotter, standard workstations', deltaK:120, timeWeeks:2 },
+      Enhanced:  { label:'8-Station + AIS Radar', desc:'Ruggedised workstations, dual display wall, drone feed monitor', deltaK:280, timeWeeks:3 },
+      FullMission:{ label:'Tactical Ops Centre', desc:'10 workstations, multi-source ISR fusion display, Link-16 compatible', deltaK:520, timeWeeks:5 },
+    }
+  },
+};
+
+const FOH_BASE_PRICES = {
+  'AQS-25': { hull: 1100, fitout_base: 600 }  // AED K
+};
+
+let fohSelections = { 'MD-01':'Standard','MD-02':'Standard','MD-03':'Standard','MD-04':'Standard' };
+
+function openFOHPanel() {
+  if (APP.config !== 'FOH') {
+    toast('Switch to FOH configuration first');
+    // Auto-switch
+    APP.config = 'FOH';
+    document.getElementById('tb-config').textContent = 'FOH';
+    renderFloorPlan();
+  }
+  const panel = document.getElementById('foh-panel');
+  panel.classList.add('open');
+  buildFOHPanel();
+}
+
+function closeFOHPanel() {
+  document.getElementById('foh-panel').classList.remove('open');
+}
+
+function buildFOHPanel() {
+  const M = MODEL_DB[APP.model];
+  document.getElementById('foh-model-lbl').textContent = APP.model + ' ' + M.name;
+  document.getElementById('foh-hull-cost').textContent = 'Hull + platform: AED '+(M.costK.hull/1000).toFixed(1)+'M';
+
+  const zonesEl = document.getElementById('foh-zones');
+  zonesEl.innerHTML = Object.entries(FOH_ZONES).map(([zid, zone]) => `
+    <div class="foh-zone-card" id="fohzc-${zid}">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);background:rgba(201,168,76,0.1);padding:3px 8px;border-radius:2px;flex-shrink:0">${zid}</div>
+        <div>
+          <div style="font-size:12px;color:var(--w);font-weight:500">${zone.name}</div>
+          <div style="font-size:10px;color:var(--g2);margin-top:1px">Hospitality: ${zone.hospitality}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+        ${Object.entries(zone.configs).map(([lvl,cfg]) => `
+          <div class="foh-cfg-opt ${fohSelections[zid]===lvl?'selected':''}" onclick="setFOHZone('${zid}','${lvl}')">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:${fohSelections[zid]===lvl?'var(--gold)':'var(--g2)'};margin-bottom:3px;letter-spacing:0.08em">${lvl.replace('FullMission','Full Mission')}</div>
+            <div style="font-size:10px;color:${fohSelections[zid]===lvl?'var(--w)':'var(--g3)'};line-height:1.4;margin-bottom:5px">${cfg.label}</div>
+            <div style="font-size:9px;color:var(--g1);line-height:1.5">${cfg.desc}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:${fohSelections[zid]===lvl?'var(--gl)':'var(--g2)'};margin-top:6px">+AED ${cfg.deltaK}K · ${cfg.timeWeeks}w</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  updateFOHTotal();
+}
+
+function setFOHZone(zid, level) {
+  fohSelections[zid] = level;
+  buildFOHPanel();
+}
+
+function updateFOHTotal() {
+  const M = MODEL_DB[APP.model];
+  const hullK = M.costK.hull + M.costK.marine + M.costK.hvac + M.costK.pm + M.costK.overhead + M.costK.contingency;
+  const fitoutDelta = Object.entries(fohSelections).reduce((sum,[zid,lvl]) => {
+    return sum + (FOH_ZONES[zid]?.configs[lvl]?.deltaK || 0);
+  }, 0);
+  const fitoutBase = 600; // AED K base FOH fitout
+  const totalK = hullK + fitoutBase + fitoutDelta;
+  const maxWeeks = Math.max(...Object.entries(fohSelections).map(([zid,lvl]) => FOH_ZONES[zid]?.configs[lvl]?.timeWeeks || 0));
+
+  // Determine variant name
+  const levels = Object.values(fohSelections);
+  const hasFullMission = levels.some(l=>l==='FullMission');
+  const hasEnhanced = levels.some(l=>l==='Enhanced');
+  const variantName = hasFullMission ? 'FOH Full Mission' : hasEnhanced ? 'FOH Enhanced' : 'FOH Standard';
+
+  document.getElementById('foh-total').textContent = 'AED '+(totalK/1000).toFixed(2)+'M';
+  document.getElementById('foh-variant').textContent = variantName;
+  document.getElementById('foh-timeline').textContent = (8+maxWeeks)+' months';
+  document.getElementById('foh-fitout-delta').textContent = '+AED '+(fitoutK/1000||((fitoutBase+fitoutDelta)/1000)).toFixed(2)+'M fit-out';
+
+  // Margin calc
+  const margin = Math.round((1 - totalK / (totalK * 1.45)) * 100);
+  document.getElementById('foh-margin').textContent = '~38–52%';
+}
+
+function applyFOHToDesign() {
+  // Apply FOH config selections to APP state
+  APP.config = 'FOH';
+  APP.fohSelections = {...fohSelections};
+  closeFOHPanel();
+  renderFloorPlan();
+  toast('FOH configuration applied to design');
+  // Highlight FOH zones in studio
+  ['MD-01','MD-02','MD-03','MD-04'].forEach(zid => {
+    const el = document.querySelector(`[data-zone="${zid}"]`);
+    if (el) el.style.stroke = '#C9A84C';
+  });
+}
+
+function fohToProposal() {
+  applyFOHToDesign();
+  APP.fohForProposal = true;
+  navTo(3); // go to pipeline
+  toast('FOH design ready — run pipeline to generate report');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FEATURE 5: DESIGN VERSION HISTORY
+// ═══════════════════════════════════════════════════════════════
+const VERSION_STORE_KEY = 'aq_design_versions';
+
+function getVersions() {
+  try { return JSON.parse(localStorage.getItem(VERSION_STORE_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveVersion(name) {
+  const vName = name || prompt('Version name:', `v${getVersions().length+1} — ${APP.model} ${APP.config} ${APP.tier}`);
+  if (!vName) return;
+  const snapshot = {
+    id: 'v-'+Date.now(),
+    name: vName,
+    ts: Date.now(),
+    model: APP.model,
+    config: APP.config,
+    tier: APP.tier,
+    market: APP.market,
+    opts: [...APP.opts],
+    projectName: APP.projectName,
+    placedItems: APP.placedItems.map(p => ({...p})),
+    pipelineResult: APP.pipelineResult ? JSON.parse(JSON.stringify(APP.pipelineResult)) : null,
+  };
+  const versions = getVersions();
+  versions.unshift(snapshot);
+  if (versions.length > 20) versions.pop(); // keep last 20
+  try { localStorage.setItem(VERSION_STORE_KEY, JSON.stringify(versions)); }
+  catch(e) { toast('Storage full — clear old versions'); return; }
+  toast(`Version saved: "${vName}"`);
+  buildVersionsList();
+}
+
+function loadVersion(id) {
+  const versions = getVersions();
+  const v = versions.find(v => v.id === id);
+  if (!v) { toast('Version not found'); return; }
+  if (!confirm(`Load "${v.name}"? Current design will be replaced.`)) return;
+  APP.model = v.model;
+  APP.config = v.config;
+  APP.tier = v.tier;
+  APP.market = v.market || 'commercial_hospitality';
+  APP.opts = new Set(v.opts || []);
+  APP.projectName = v.projectName || '';
+  APP.placedItems = (v.placedItems || []).map(p => ({...p}));
+  UNDO_STACK.length = 0;
+  if (v.pipelineResult) {
+    APP.pipelineResult = v.pipelineResult;
+    APP.unlocked.add(3);
+    APP.unlocked.add(4);
+  }
+  APP.unlocked.add(2);
+  navTo(2);
+  toast(`Loaded: "${v.name}"`);
+}
+
+function deleteVersion(id, e) {
+  e.stopPropagation();
+  const versions = getVersions().filter(v => v.id !== id);
+  localStorage.setItem(VERSION_STORE_KEY, JSON.stringify(versions));
+  buildVersionsList();
+  toast('Version deleted');
+}
+
+function compareVersions(id1, id2) {
+  const versions = getVersions();
+  const v1 = versions.find(v=>v.id===id1);
+  const v2 = versions.find(v=>v.id===id2);
+  if (!v1||!v2) return;
+  const panel = document.getElementById('version-compare');
+  if (!panel) return;
+  const fields = [
+    ['Model', 'model'], ['Config', 'config'], ['Tier', 'tier'],
+    ['Placed items', v=>(v.placedItems||[]).length+' items'],
+    ['Project', 'projectName'],
+  ];
+  panel.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Comparing versions</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr>
+        <th style="text-align:left;padding:5px 8px;font-family:'DM Mono',monospace;font-size:7px;color:var(--g1);border-bottom:1px solid var(--b)">Field</th>
+        <th style="text-align:left;padding:5px 8px;font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);border-bottom:1px solid var(--b)">${v1.name}</th>
+        <th style="text-align:left;padding:5px 8px;font-family:'DM Mono',monospace;font-size:7px;color:var(--tl);border-bottom:1px solid var(--b)">${v2.name}</th>
+      </tr></thead>
+      <tbody>
+        ${fields.map(([label,field]) => {
+          const val1 = typeof field==='function' ? field(v1) : v1[field]||'—';
+          const val2 = typeof field==='function' ? field(v2) : v2[field]||'—';
+          const diff = val1 !== val2;
+          return `<tr style="${diff?'background:rgba(201,168,76,0.04)':''}">
+            <td style="padding:5px 8px;color:var(--g2)">${label}</td>
+            <td style="padding:5px 8px;color:${diff?'var(--gold)':'var(--g3)'}">${val1}</td>
+            <td style="padding:5px 8px;color:${diff?'var(--tl)':'var(--g3)'}">${val2}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  panel.style.display = 'block';
+}
+
+function openVersionsPanel() {
+  const panel = document.getElementById('versions-panel');
+  panel.classList.add('open');
+  buildVersionsList();
+}
+
+function closeVersionsPanel() {
+  document.getElementById('versions-panel').classList.remove('open');
+}
+
+function buildVersionsList() {
+  const versions = getVersions();
+  const el = document.getElementById('versions-list');
+  if (!el) return;
+  if (versions.length === 0) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;font-size:12px;color:var(--g2);line-height:1.8">
+      No saved versions yet.<br>
+      <span style="color:var(--g1);font-size:10px">Click "Save Version" in the studio toolbar to capture the current design.</span>
+    </div>`;
+    return;
+  }
+  el.innerHTML = versions.map(v => {
+    const date = new Date(v.ts).toLocaleDateString('en-AE',{day:'2-digit',month:'short'});
+    const time = new Date(v.ts).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'});
+    const isCurrent = v.model===APP.model && v.config===APP.config && v.tier===APP.tier;
+    return `<div class="version-card ${isCurrent?'current':''}" onclick="loadVersion('${v.id}')">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--w);margin-bottom:2px">${v.name}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1)">${date} ${time} · ${v.model} ${v.config} ${v.tier}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);margin-top:2px">${(v.placedItems||[]).length} items placed${v.pipelineResult?' · pipeline complete':''}</div>
+        </div>
+        <button onclick="deleteVersion('${v.id}',event)" style="padding:3px 8px;background:transparent;border:1px solid var(--b);border-radius:2px;color:var(--g1);font-size:10px;cursor:pointer;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--b)';this.style.color='var(--g1)'">✕</button>
+      </div>
+      ${isCurrent?'<div style="font-family:\'DM Mono\',monospace;font-size:7px;color:var(--green);margin-top:5px">● current design</div>':''}
+    </div>`;
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// FEATURE 2: QUOTE GENERATOR + PROPOSAL BUILDER
+// ═══════════════════════════════════════════════════════════════
+async function generateProposal() {
+  const btn = document.getElementById('btn-proposal');
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const M = MODEL_DB[APP.model];
+    const P = APP.pipelineResult || {};
+    const s7 = P.S7 || {};
+    const roi = APP.roiSnapshot || null;
+    const margin = 18;
+    const pw = 210 - margin*2;
+    let y = margin;
+    const nl = (g=6)=>{ y+=g; };
+    const checkPage = (need)=>{ if(y+need>280){doc.addPage();y=margin;} };
+
+    // ── COVER PAGE ────────────────────────────────────────────
+    doc.setFillColor(5,9,15);
+    doc.rect(0,0,210,297,'F');
+    // Gold bar
+    doc.setFillColor(201,168,76);
+    doc.rect(0,0,6,297,'F');
+    // Client block
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(130,130,130);
+    doc.text('COMMERCIAL PROPOSAL — CONFIDENTIAL', margin+8, 28);
+    nl(10); y=38;
+    doc.setFontSize(28); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+    doc.text('AQUASTRA', margin+8, y);
+    nl(10);
+    doc.setFontSize(14); doc.setFont('helvetica','normal'); doc.setTextColor(238,235,228);
+    doc.text(APP.model+' '+M.name, margin+8, y);
+    nl(7);
+    doc.setFontSize(11); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+    doc.text(APP.config+' Configuration · '+APP.tier+' Specification', margin+8, y);
+    nl(7);
+    doc.setFontSize(10); doc.setTextColor(120,120,120);
+    doc.text(M.loa+'m '+M.hull+' · '+M.price[APP.tier]+' · UAE Manufactured, Sharjah', margin+8, y);
+    nl(20);
+    // Horizontal rule
+    doc.setDrawColor(201,168,76); doc.setLineWidth(0.3);
+    doc.line(margin+8, y, 210-margin, y); nl(10);
+    // Prepared for
+    const clientName = APP.projectName || 'Prospective Operator';
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(120,120,120);
+    doc.text('PREPARED FOR', margin+8, y); nl(6);
+    doc.setFontSize(14); doc.setFont('helvetica','normal'); doc.setTextColor(238,235,228);
+    doc.text(clientName, margin+8, y); nl(12);
+    doc.setFontSize(9); doc.setTextColor(100,100,100);
+    doc.text('Date: '+new Date().toLocaleDateString('en-AE',{day:'2-digit',month:'long',year:'numeric'}), margin+8, y); nl(6);
+    doc.text('Reference: '+APP.model+'-PROP-'+Date.now().toString().slice(-6), margin+8, y); nl(6);
+    doc.text('Valid: 90 days from date of issue', margin+8, y);
+
+    // ── PAGE 2: PLATFORM OVERVIEW ─────────────────────────────
+    doc.addPage(); y=margin;
+    doc.setFillColor(5,9,15); doc.rect(0,0,210,297,'F');
+    doc.setFillColor(201,168,76); doc.rect(0,0,6,297,'F');
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+    doc.text('SECTION 1 — PLATFORM OVERVIEW', margin+8, y); nl(10);
+
+    // Key specs 2×3 grid
+    const specs = [
+      ['LOA', M.loa+'m'], ['BOA', M.boa+'m'], ['Draft', M.draft+'m'],
+      ['Displacement', M.displacement+'t'], ['GM Transverse', M.gmt+'m'], ['Stability', M.stability],
+      ['Main Deck', M.mainDeckArea+'m²'], ['Upper Deck', M.upperDeckArea+'m²'], ['Hull', M.hull],
+    ];
+    const cellW = pw/3, cellH = 16;
+    specs.forEach(([k,v], i) => {
+      const cx = margin+8 + (i%3)*cellW;
+      const cy = y + Math.floor(i/3)*cellH;
+      doc.setFillColor(12,22,37); doc.rect(cx, cy, cellW-2, cellH-1, 'F');
+      doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(226,196,122);
+      doc.text(v, cx+3, cy+9);
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text(k.toUpperCase(), cx+3, cy+14);
+    });
+    nl(3*cellH+8);
+
+    // Summary statement
+    if (s7.summary_statement) {
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+      const lines = doc.splitTextToSize(s7.summary_statement, pw);
+      doc.text(lines, margin+8, y); nl(lines.length*5+8);
+    }
+
+    // Price schedule
+    checkPage(40);
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+    doc.text('SECTION 2 — COMMERCIAL TERMS', margin+8, y); nl(8);
+    const tiers = ['Standard','Premium','Luxury'];
+    tiers.forEach((t,i) => {
+      const isSel = t===APP.tier;
+      if(isSel){doc.setFillColor(20,35,55);doc.rect(margin+8,y-4,pw,14,'F');}
+      doc.setFontSize(isSel?12:10); doc.setFont('helvetica',isSel?'bold':'normal');
+      doc.setTextColor(isSel?[226,196,122]:[140,140,140]);
+      doc.text(t+(isSel?' ✓ SELECTED':''), margin+10, y+4);
+      doc.text(M.price[t], 210-margin-2, y+4, {align:'right'});
+      nl(14);
+    });
+    nl(4);
+
+    // Payment schedule
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+    doc.text('PAYMENT SCHEDULE', margin+8, y); nl(8);
+    const pymt = [
+      ['30% deposit on signed contract', M.price[APP.tier]],
+      ['40% on keel-laying (month 4)', ''],
+      ['30% on delivery and commissioning', ''],
+      ['Delivery timeline', '8–12 months from contract'],
+    ];
+    pymt.forEach(([k,v])=>{
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(176,180,188);
+      doc.text('→ '+k, margin+10, y); if(v) doc.text(v, 210-margin-2, y,{align:'right'});
+      nl(7);
+    });
+
+    // ── PAGE 3: ROI ───────────────────────────────────────────
+    if (roi) {
+      doc.addPage(); y=margin;
+      doc.setFillColor(5,9,15); doc.rect(0,0,210,297,'F');
+      doc.setFillColor(201,168,76); doc.rect(0,0,6,297,'F');
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(201,168,76);
+      doc.text('SECTION 3 — OPERATOR ROI SUMMARY', margin+8, y); nl(10);
+      const roiItems = [
+        ['Payback period', roi.payback+' years'], ['10-year IRR', roi.irr],
+        ['Annual EBITDA (Y1)', roi.ebitda], ['Gross yield on cost', roi.yield],
+      ];
+      roiItems.forEach(([k,v],i)=>{
+        const cx = margin+8 + (i%2)*(pw/2);
+        const cy = y + Math.floor(i/2)*22;
+        doc.setFillColor(12,22,37); doc.rect(cx, cy, pw/2-3, 19, 'F');
+        doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(226,196,122);
+        doc.text(v, cx+4, cy+11);
+        doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+        doc.text(k.toUpperCase(), cx+4, cy+17);
+      });
+      nl(2*22+12);
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(140,140,140);
+      doc.text('Full financial model available on request. AED figures. Based on operator assumptions.', margin+8, y);
+    }
+
+    // ── FOOTER all pages ──────────────────────────────────────
+    const total = doc.getNumberOfPages();
+    for(let p=1;p<=total;p++){
+      doc.setPage(p);
+      doc.setFillColor(201,168,76); doc.rect(0,293,210,4,'F');
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text('AquaStra Marine Industries · Sharjah, UAE · Confidential', margin+8, 291);
+      doc.text('p.'+p+'/'+total, 210-margin, 291,{align:'right'});
+    }
+
+    const fn = (APP.projectName||APP.model).replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    doc.save('AquaStra_Proposal_'+fn+'.pdf');
+    toast('Proposal PDF downloaded ✓');
+  } catch(e) {
+    console.error(e); toast('Proposal generation failed: '+e.message);
+  } finally {
+    if(btn){btn.textContent='↓ Download Proposal';btn.disabled=false;}
+  }
+}
+
 // Aliases for HTML onclick handlers
 function toggleLayer(name,row){toggle3DLayer(name,row);}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D ASSET MANAGER — load custom GLTF/GLB/OBJ hull files
+// ═══════════════════════════════════════════════════════════════
+
+// Runtime asset store — keyed by model (e.g. 'AQS-25')
+// Each entry: { group: THREE.Group, meta: {filename, scale, px, py, pz, rx, ry, rz, loadedAt} }
+const CUSTOM_ASSETS = {};
+
+// Currently selected model in the asset panel
+let assetPanelModel = null;
+let assetPendingGroup = null; // group loaded but not yet applied
+let assetPreviewRenderer = null;
+let assetPreviewScene = null;
+let assetPreviewCamera = null;
+let assetPreviewAnimId = null;
+
+// ── Open / Close ──────────────────────────────────────────────
+function openAssetPanel() {
+  const panel = document.getElementById('asset-panel');
+  panel.classList.add('open');
+  buildAssetModelList();
+  // Default to current model
+  selectAssetModel(APP.model);
+  initAssetPreview();
+}
+
+function closeAssetPanel() {
+  document.getElementById('asset-panel').classList.remove('open');
+  // Stop preview render loop
+  if (assetPreviewAnimId) { cancelAnimationFrame(assetPreviewAnimId); assetPreviewAnimId = null; }
+}
+
+// ── Model list ────────────────────────────────────────────────
+function buildAssetModelList() {
+  const el = document.getElementById('asset-model-list');
+  if (!el) return;
+  el.innerHTML = Object.entries(MODEL_DB).map(([key, M]) => {
+    const hasAsset = !!CUSTOM_ASSETS[key];
+    return `<div class="asset-model-card ${assetPanelModel===key?'active':''}" onclick="selectAssetModel('${key}')">
+      <div class="asset-model-name">${key}</div>
+      (()=>{const a=CUSTOM_ASSETS[key];const st=!a?'':a.needsReupload?'warn':'loaded';const txt=!a?'Using procedural geometry':a.needsReupload?'⚠ Previously loaded: '+a.meta.filename+' — re-upload':('✓ Custom hull: '+a.meta.filename);return '<div class="asset-model-status '+st+'">'+txt+'</div>';})()
+    </div>`;
+  }).join('');
+}
+
+function selectAssetModel(key) {
+  assetPanelModel = key;
+  assetPendingGroup = null;
+  buildAssetModelList();
+  // Update label
+  const lbl = document.getElementById('asset-model-name-lbl');
+  const prevLbl = document.getElementById('asset-preview-label');
+  if (lbl) lbl.textContent = key + ' ' + MODEL_DB[key].name;
+  // Load transform values from existing asset if any
+  const existing = CUSTOM_ASSETS[key];
+  if (existing) {
+    const m = existing.meta;
+    setTfValues(m.scale||1, m.px||0, m.py||0, m.pz||0, m.rx||0, m.ry||0, m.rz||0);
+    if (prevLbl) prevLbl.textContent = key+' · Custom: '+m.filename;
+    setAssetStatus('ok', 'Custom hull loaded: '+m.filename+' · '+new Date(m.loadedAt).toLocaleDateString());
+    // Show the existing asset in preview
+    showAssetInPreview(existing.group, key);
+  } else {
+    setTfValues(1,0,0,0,0,0,0);
+    if (prevLbl) prevLbl.textContent = key+' · Procedural geometry';
+    setAssetStatus('', 'No custom hull for '+key+' — using procedural geometry');
+    showProceduralInPreview(key);
+  }
+  const infoBox = document.getElementById('asset-info-box');
+  if (infoBox) {
+    const M = MODEL_DB[key];
+    infoBox.innerHTML = `<strong style="color:var(--gl)">${key} ${M.name}</strong> — ${M.loa}m ${M.hull}<br>
+      Expected file origin: hull amidships at waterline. Y-axis up. Fore is +X.<br>
+      Tip: export from Rhino/Fusion360 as GLB with Y-up coordinate system for best results.
+      ${existing ? '<br><br><span style="color:var(--green)">✓ Custom hull active — zones and equipment overlay automatically.</span>' : ''}`;
+  }
+}
+
+function setTfValues(scale,px,py,pz,rx,ry,rz) {
+  const ids = {scale,px,py,pz,rx,ry,rz};
+  Object.entries(ids).forEach(([id,val]) => {
+    const el = document.getElementById('tf-'+id);
+    if (el) el.value = val;
+  });
+}
+
+function getTfValues() {
+  const g = id => parseFloat(document.getElementById('tf-'+id)?.value||0);
+  return {
+    scale: g('scale')||1,
+    px: g('px'), py: g('py'), pz: g('pz'),
+    rx: g('rx'), ry: g('ry'), rz: g('rz'),
+  };
+}
+
+// ── File handling ──────────────────────────────────────────────
+function assetDragOver(e) {
+  e.preventDefault();
+  document.getElementById('asset-drop')?.classList.add('drag-over');
+}
+function assetDragLeave() {
+  document.getElementById('asset-drop')?.classList.remove('drag-over');
+}
+function assetDrop(e) {
+  e.preventDefault();
+  assetDragLeave();
+  const file = e.dataTransfer?.files?.[0];
+  if (file) processAssetFile(file);
+}
+function assetFileSelected(input) {
+  const file = input?.files?.[0];
+  if (file) processAssetFile(file);
+}
+
+async function processAssetFile(file) {
+  if (!assetPanelModel) { toast('Select a model first'); return; }
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['gltf','glb','obj'].includes(ext)) {
+    setAssetStatus('err', 'Unsupported format: .'+ext+' — use GLTF, GLB, or OBJ');
+    return;
+  }
+  setAssetStatus('loading', 'Loading '+file.name+'…');
+  try {
+    // Load Three.js loaders lazily
+    await ensureLoaders();
+    const arrayBuffer = await file.arrayBuffer();
+    let group;
+    if (ext === 'glb' || ext === 'gltf') {
+      group = await loadGLTF(arrayBuffer, ext === 'gltf' ? file.name : null);
+    } else if (ext === 'obj') {
+      group = await loadOBJ(arrayBuffer);
+    }
+    if (!group) throw new Error('Loader returned null');
+    // Auto-scale to match model LOA
+    fitGroupToModel(group, assetPanelModel);
+    assetPendingGroup = group;
+    const infoText = analyseGroup(group);
+    setAssetStatus('ok', 'Loaded: '+file.name+' · '+infoText+' · Adjust transforms then click Apply');
+    const prevLbl = document.getElementById('asset-preview-label');
+    if (prevLbl) prevLbl.textContent = file.name+' · '+infoText;
+    showAssetInPreview(group, assetPanelModel);
+    // Store filename
+    assetPendingGroup._filename = file.name;
+    const infoBox = document.getElementById('asset-info-box');
+    if (infoBox) infoBox.innerHTML = `<span style="color:var(--green)">✓ File loaded: ${file.name}</span><br>${infoText}<br><br>Adjust scale/position/rotation if needed, then click <strong>Apply to Studio</strong>.`;
+  } catch(e) {
+    console.error('Asset load error:', e);
+    setAssetStatus('err', 'Load failed: '+e.message);
+  }
+}
+
+async function ensureLoaders() {
+  const loads = [];
+  if (!window.THREE?.GLTFLoader) {
+    loads.push(new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    }));
+  }
+  if (!window.THREE?.OBJLoader) {
+    loads.push(new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    }));
+  }
+  if (loads.length) await Promise.all(loads);
+}
+
+function loadGLTF(buffer, filename) {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.GLTFLoader();
+    loader.parse(buffer, '', gltf => {
+      const group = new THREE.Group();
+      group.add(gltf.scene);
+      resolve(group);
+    }, reject);
+  });
+}
+
+function loadOBJ(buffer) {
+  return new Promise((resolve) => {
+    const loader = new THREE.OBJLoader();
+    const text = new TextDecoder().decode(buffer);
+    const obj = loader.parse(text);
+    // OBJ may return a Group directly
+    const group = new THREE.Group();
+    group.add(obj);
+    resolve(group);
+  });
+}
+
+function fitGroupToModel(group, modelKey) {
+  // Auto-scale to fit the model's LOA
+  const M = MODEL_DB[modelKey];
+  if (!M) return;
+  const box = new THREE.Box3().setFromObject(group);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  if (maxDim > 0 && maxDim !== M.loa) {
+    const scale = M.loa / maxDim;
+    group.scale.setScalar(scale);
+    // Update scale input
+    const scaleInput = document.getElementById('tf-scale');
+    if (scaleInput) scaleInput.value = scale.toFixed(4);
+  }
+  // Centre on origin
+  const newBox = new THREE.Box3().setFromObject(group);
+  const centre = new THREE.Vector3();
+  newBox.getCenter(centre);
+  group.position.sub(centre);
+}
+
+function analyseGroup(group) {
+  let meshCount = 0, triCount = 0;
+  group.traverse(obj => {
+    if (obj.isMesh) {
+      meshCount++;
+      const geo = obj.geometry;
+      if (geo.index) triCount += geo.index.count / 3;
+      else if (geo.attributes.position) triCount += geo.attributes.position.count / 3;
+    }
+  });
+  return `${meshCount} meshes · ${Math.round(triCount).toLocaleString()} triangles`;
+}
+
+function applyTransform(group, tf) {
+  const s = tf.scale || 1;
+  group.scale.setScalar(s);
+  group.position.set(tf.px||0, tf.py||0, tf.pz||0);
+  const DEG = Math.PI/180;
+  group.rotation.set((tf.rx||0)*DEG, (tf.ry||0)*DEG, (tf.rz||0)*DEG);
+}
+
+// ── Apply / Clear ─────────────────────────────────────────────
+function applyAsset() {
+  if (!assetPanelModel) { toast('Select a model first'); return; }
+  const sourceGroup = assetPendingGroup || CUSTOM_ASSETS[assetPanelModel]?.group;
+  if (!sourceGroup) { toast('No file loaded — drop or browse for a GLTF/GLB/OBJ file first'); return; }
+  const tf = getTfValues();
+  // Clone so we can apply independent transforms
+  const group = sourceGroup.clone(true);
+  applyTransform(group, tf);
+  CUSTOM_ASSETS[assetPanelModel] = {
+    group,
+    meta: {
+      filename: sourceGroup._filename || 'custom_hull',
+      scale: tf.scale, px: tf.px, py: tf.py, pz: tf.pz,
+      rx: tf.rx, ry: tf.ry, rz: tf.rz,
+      loadedAt: Date.now(),
+    }
+  };
+  // Persist metadata to localStorage (not the 3D data — too large)
+  try {
+    const saved = JSON.parse(localStorage.getItem('aq_asset_meta')||'{}');
+    saved[assetPanelModel] = CUSTOM_ASSETS[assetPanelModel].meta;
+    localStorage.setItem('aq_asset_meta', JSON.stringify(saved));
+  } catch(e) {}
+  setAssetStatus('ok', 'Applied to '+assetPanelModel+' — hull will use your file in Design Studio');
+  buildAssetModelList();
+  toast('Custom hull applied to '+assetPanelModel+' ✓');
+  // Refresh studio 3D if it's currently showing this model
+  if (APP.model === assetPanelModel && APP.deck === '3d') {
+    build3DScene();
+  }
+}
+
+function clearAsset() {
+  if (!assetPanelModel) return;
+  delete CUSTOM_ASSETS[assetPanelModel];
+  assetPendingGroup = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem('aq_asset_meta')||'{}');
+    delete saved[assetPanelModel];
+    localStorage.setItem('aq_asset_meta', JSON.stringify(saved));
+  } catch(e) {}
+  setTfValues(1,0,0,0,0,0,0);
+  setAssetStatus('', 'Custom hull removed — '+assetPanelModel+' back to procedural geometry');
+  buildAssetModelList();
+  showProceduralInPreview(assetPanelModel);
+  if (APP.model === assetPanelModel && APP.deck === '3d') build3DScene();
+  toast(assetPanelModel+' reset to procedural geometry');
+}
+
+function exportAssetConfig() {
+  const config = {};
+  Object.entries(CUSTOM_ASSETS).forEach(([key, asset]) => {
+    config[key] = asset.meta;
+  });
+  const blob = new Blob([JSON.stringify(config, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'aquastra_asset_config.json';
+  a.click();
+  toast('Asset config exported');
+}
+
+function updateAssetPreview() {
+  // Re-apply transform to pending group and update preview
+  const group = assetPendingGroup || CUSTOM_ASSETS[assetPanelModel]?.group;
+  if (!group) return;
+  const tf = getTfValues();
+  applyTransform(group, tf);
+  // Preview re-renders via rAF loop
+}
+
+// ── Preview renderer ──────────────────────────────────────────
+function initAssetPreview() {
+  const cv = document.getElementById('asset-preview-canvas');
+  if (!cv || assetPreviewRenderer) return;
+  try {
+    assetPreviewRenderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:false});
+    assetPreviewRenderer.setClearColor(0x080F1C, 1);
+    assetPreviewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const w = cv.clientWidth||600, h = cv.clientHeight||300;
+    assetPreviewRenderer.setSize(w, h, false);
+    assetPreviewCamera = new THREE.PerspectiveCamera(45, w/h, 0.1, 1000);
+    assetPreviewScene = new THREE.Scene();
+    assetPreviewScene.add(new THREE.AmbientLight(0x334466, 0.9));
+    const sun = new THREE.DirectionalLight(0xE2C47A, 1.2);
+    sun.position.set(30, 40, 20);
+    assetPreviewScene.add(sun);
+    assetPreviewScene.add(new THREE.DirectionalLight(0x1A6B7C, 0.4).position.set(-20, 10, -10));
+    // Water plane
+    const wg = new THREE.PlaneGeometry(200, 100);
+    const wm = new THREE.Mesh(wg, new THREE.MeshPhongMaterial({color:0x0A2535, transparent:true, opacity:0.7}));
+    wm.rotation.x = -Math.PI/2;
+    assetPreviewScene.add(wm);
+    // Grid helper
+    const grid = new THREE.GridHelper(100, 20, 0x1A3050, 0x0D1A28);
+    grid.position.y = -0.05;
+    assetPreviewScene.add(grid);
+    // Orbit controls via mouse
+    let previewOrb = {theta:-0.6, phi:1.0, radius:40, dragging:false, lx:0, ly:0};
+    const updatePreviewCam = () => {
+      assetPreviewCamera.position.set(
+        previewOrb.radius * Math.sin(previewOrb.phi) * Math.sin(previewOrb.theta),
+        previewOrb.radius * Math.cos(previewOrb.phi),
+        previewOrb.radius * Math.sin(previewOrb.phi) * Math.cos(previewOrb.theta)
+      );
+      assetPreviewCamera.lookAt(0, 0, 0);
+    };
+    updatePreviewCam();
+    cv.addEventListener('mousedown', e => { previewOrb.dragging=true; previewOrb.lx=e.clientX; previewOrb.ly=e.clientY; });
+    cv.addEventListener('mouseup', () => { previewOrb.dragging=false; });
+    cv.addEventListener('mousemove', e => {
+      if (!previewOrb.dragging) return;
+      previewOrb.theta -= (e.clientX-previewOrb.lx)*0.008;
+      previewOrb.phi = Math.max(0.1, Math.min(Math.PI-0.1, previewOrb.phi-(e.clientY-previewOrb.ly)*0.008));
+      previewOrb.lx=e.clientX; previewOrb.ly=e.clientY;
+      updatePreviewCam();
+    });
+    cv.addEventListener('wheel', e => { previewOrb.radius=Math.max(5,Math.min(200,previewOrb.radius+e.deltaY*0.05)); updatePreviewCam(); },{passive:true});
+    // Render loop
+    function previewAnim() {
+      assetPreviewAnimId = requestAnimationFrame(previewAnim);
+      assetPreviewRenderer.render(assetPreviewScene, assetPreviewCamera);
+    }
+    previewAnim();
+  } catch(e) { console.warn('Asset preview init failed:', e); }
+}
+
+function showAssetInPreview(group, modelKey) {
+  if (!assetPreviewScene) return;
+  // Remove old model meshes from preview
+  const toRemove = [];
+  assetPreviewScene.traverse(obj => { if (obj.userData.isPreviewModel) toRemove.push(obj); });
+  toRemove.forEach(o => assetPreviewScene.remove(o));
+  const clone = group.clone(true);
+  clone.userData.isPreviewModel = true;
+  assetPreviewScene.add(clone);
+  // Position camera to fit
+  const M = MODEL_DB[modelKey];
+  if (M && assetPreviewCamera) {
+    assetPreviewCamera.position.set(M.loa*0.6, M.depth*2.5, M.boa*2);
+    assetPreviewCamera.lookAt(M.loa/2, 0, 0);
+  }
+}
+
+function showProceduralInPreview(modelKey) {
+  if (!assetPreviewScene) return;
+  // Remove custom model
+  const toRemove = [];
+  assetPreviewScene.traverse(obj => { if (obj.userData.isPreviewModel) toRemove.push(obj); });
+  toRemove.forEach(o => assetPreviewScene.remove(o));
+  // Show a simple procedural hull
+  const M = MODEL_DB[modelKey]; if (!M) return;
+  const group = new THREE.Group();
+  group.userData.isPreviewModel = true;
+  const mat = new THREE.MeshPhongMaterial({color:0x1A3A5F, shininess:40, transparent:true, opacity:0.85});
+  // Main hull
+  const hg = new THREE.BoxGeometry(M.loa*0.9, M.depth, M.mainHullBeam);
+  const hm = new THREE.Mesh(hg, mat);
+  hm.position.set(M.loa/2, M.depth/2 - M.draft, 0);
+  group.add(hm);
+  // Outriggers
+  if (M.hull==='trimaran') {
+    [-1,1].forEach(s => {
+      const og = new THREE.BoxGeometry(M.loa*0.6, M.depth*0.6, M.outriggerBeam);
+      const om = new THREE.Mesh(og, new THREE.MeshPhongMaterial({color:0x0F2A45,shininess:30}));
+      om.position.set(M.loa*0.38, -M.draft*0.5, s*M.outriggerOffset);
+      group.add(om);
+    });
+  } else {
+    [-1,-0.35,0.35,1].forEach(s => {
+      const og = new THREE.BoxGeometry(M.loa*0.9, M.depth*0.5, M.outriggerBeam*0.7);
+      const om = new THREE.Mesh(og, new THREE.MeshPhongMaterial({color:0x0F2A45,shininess:30}));
+      om.position.set(M.loa/2, -M.draft*0.5, s*M.outriggerOffset);
+      group.add(om);
+    });
+  }
+  assetPreviewScene.add(group);
+  if (assetPreviewCamera) {
+    assetPreviewCamera.position.set(M.loa*0.6, M.depth*3, M.boa*2);
+    assetPreviewCamera.lookAt(M.loa/2, 0, 0);
+  }
+}
+
+// ── Status helper ─────────────────────────────────────────────
+function setAssetStatus(type, text) {
+  const dot = document.getElementById('asset-status-dot');
+  const txt = document.getElementById('asset-status-text');
+  if (dot) dot.className = 'asset-status-dot' + (type ? ' '+type : '');
+  if (txt) txt.textContent = text;
+}
+
+
 function renderAll(){}  // compatibility shim
 function enterPlaceMode3(id){beginPlace(id);}
 // Config handlers (for dynamically-rendered option rows)
@@ -4067,5 +5668,181 @@ function resize3D() {
   if (camera3) { camera3.aspect = w/h; camera3.updateProjectionMatrix(); }
 }
 </script>
+
+<!-- ════ 3D ASSET MANAGER ════════════════════════════════════ -->
+<div id="asset-panel">
+  <div class="asset-header">
+    <div>
+      <div class="asset-title">AQUA<em>STRA</em> — 3D Asset Manager</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);letter-spacing:0.15em;margin-top:2px">Load your own GLTF · GLB · OBJ hull files per model · Admin only</div>
+    </div>
+    <button class="asset-close" onclick="closeAssetPanel()">✕ Close</button>
+  </div>
+  <div class="asset-body">
+
+    <!-- Left: model list -->
+    <div class="asset-sidebar">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Platform Models</div>
+      <div id="asset-model-list"></div>
+      <div style="margin-top:16px;padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--b);border-radius:2px;font-size:10px;color:var(--g2);line-height:1.7">
+        <div style="color:var(--gl);margin-bottom:4px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em">SUPPORTED FORMATS</div>
+        GLTF 2.0 (.gltf)<br>
+        Binary GLTF (.glb) ← recommended<br>
+        Wavefront OBJ (.obj)<br><br>
+        <div style="color:var(--g1);font-size:9px">Coordinate system: Y-up, Z-forward.<br>Unit: metres. Origin at hull amidships waterline.</div>
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:2px;font-size:10px;color:var(--g2);line-height:1.7">
+        <div style="color:var(--gold);margin-bottom:4px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em">WHAT STAYS PROCEDURAL</div>
+        Zone volumes and labels<br>
+        Equipment placements<br>
+        Water plane<br>
+        LED perimeter<br>
+        <div style="color:var(--g1);font-size:9px;margin-top:4px">Your file replaces the hull geometry only. All overlays remain.</div>
+      </div>
+    </div>
+
+    <!-- Right: preview + controls -->
+    <div class="asset-content">
+      <div class="asset-preview">
+        <canvas id="asset-preview-canvas"></canvas>
+        <div class="asset-preview-label" id="asset-preview-label">No model selected</div>
+      </div>
+      <div class="asset-controls" id="asset-controls">
+        <div class="asset-ctrl-section">
+          <div class="asset-ctrl-label">Load 3D file for <span id="asset-model-name-lbl" style="color:var(--w)">—</span></div>
+          <div class="asset-drop-zone" id="asset-drop" ondragover="assetDragOver(event)" ondragleave="assetDragLeave()" ondrop="assetDrop(event)">
+            <input type="file" class="asset-file-input" id="asset-file-input" accept=".gltf,.glb,.obj" onchange="assetFileSelected(this)"/>
+            <div class="asset-drop-text">Drop your 3D hull file here</div>
+            <div class="asset-drop-sub">GLTF · GLB · OBJ — or click to browse</div>
+          </div>
+        </div>
+        <div class="asset-ctrl-section">
+          <div class="asset-ctrl-label">Transform (applied on top of file transforms)</div>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px">
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);margin-bottom:5px">Scale</div>
+              <div class="asset-transform-grid">
+                <div class="asset-tf-field"><label>Uniform</label><input id="tf-scale" type="number" value="1" step="0.01" min="0.001" oninput="updateAssetPreview()"/></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);margin-bottom:5px">Position offset (m)</div>
+              <div class="asset-transform-grid">
+                <div class="asset-tf-field"><label>X (fwd)</label><input id="tf-px" type="number" value="0" step="0.1" oninput="updateAssetPreview()"/></div>
+                <div class="asset-tf-field"><label>Y (up)</label><input id="tf-py" type="number" value="0" step="0.1" oninput="updateAssetPreview()"/></div>
+                <div class="asset-tf-field"><label>Z (port)</label><input id="tf-pz" type="number" value="0" step="0.1" oninput="updateAssetPreview()"/></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g2);margin-bottom:5px">Rotation (degrees)</div>
+              <div class="asset-transform-grid">
+                <div class="asset-tf-field"><label>Pitch</label><input id="tf-rx" type="number" value="0" step="1" oninput="updateAssetPreview()"/></div>
+                <div class="asset-tf-field"><label>Yaw</label><input id="tf-ry" type="number" value="0" step="1" oninput="updateAssetPreview()"/></div>
+                <div class="asset-tf-field"><label>Roll</label><input id="tf-rz" type="number" value="0" step="1" oninput="updateAssetPreview()"/></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="asset-info-box" id="asset-info-box">
+          Select a model on the left, then drop or browse for your 3D hull file. The file is stored in your browser — nothing is uploaded to a server. Zones, equipment, and overlays are rendered on top of your hull automatically.
+        </div>
+        <div class="asset-action-row">
+          <button class="btn-asset-apply" onclick="applyAsset()">Apply to Studio →</button>
+          <button class="btn-asset-clear" onclick="clearAsset()">✕ Remove Custom Hull</button>
+          <button class="btn-asset-clear" onclick="exportAssetConfig()">↓ Export Config JSON</button>
+        </div>
+      </div>
+      <div class="asset-status-bar">
+        <div class="asset-status-dot" id="asset-status-dot"></div>
+        <span id="asset-status-text">Ready — select a model to begin</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════ DEPLOYMENT NETWORK MAP ════════════════════════════ -->
+<div id="map-panel">
+  <div class="panel-header">
+    <div><div class="panel-title">AQUA<em>STRA</em> — Deployment Network</div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);letter-spacing:0.15em;margin-top:2px">10 GCC locations · draft clearance · authority contacts · regulatory status</div></div>
+    <button class="panel-close" onclick="closeMapPanel()">✕ Close</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-sidebar">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">ADN Locations</div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="chip on" onclick="filterADNStatus('',this)" style="font-size:7px;padding:3px 8px">All</button>
+        <button class="chip" onclick="filterADNStatus('ready',this)" style="font-size:7px;padding:3px 8px;border-color:rgba(76,172,124,0.4);color:var(--green)">Ready</button>
+        <button class="chip" onclick="filterADNStatus('pending',this)" style="font-size:7px;padding:3px 8px;border-color:rgba(201,136,76,0.4);color:var(--amber)">Pending</button>
+        <button class="chip" onclick="filterADNStatus('future',this)" style="font-size:7px;padding:3px 8px">Future</button>
+      </div>
+      <div id="adn-list"></div>
+      <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--b);border-radius:2px;font-size:10px;color:var(--g2);line-height:1.7">
+        <div style="color:var(--gl);font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.1em;margin-bottom:4px">LEGEND</div>
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:5px;vertical-align:middle"></span>Ready · 
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin:0 5px 0 8px;vertical-align:middle"></span>Pending · 
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g1);margin:0 5px 0 8px;vertical-align:middle"></span>Future
+      </div>
+    </div>
+    <div id="adn-map"></div>
+  </div>
+</div>
+
+<!-- ════ FOH ZONE CONFIGURATOR ══════════════════════════════ -->
+<div id="foh-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">FOH Zone Configurator — <span id="foh-model-lbl">AQS-25 Hub</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);letter-spacing:0.15em;margin-top:2px" id="foh-hull-cost">Hull cost loading…</div>
+    </div>
+    <button class="panel-close" onclick="closeFOHPanel()">✕ Close</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+    <div style="font-size:12px;color:var(--g2);margin-bottom:16px;line-height:1.7;max-width:700px">Configure each of the 4 FOH-convertible zones. All configurations are fit-out substitutions only — no structural changes to the hull required. Select the level for each zone then Apply to Design.</div>
+    <div id="foh-zones"></div>
+    <div class="foh-total-bar" style="margin-top:16px">
+      <div class="foh-total-item"><div class="foh-total-val" id="foh-total">—</div><div class="foh-total-lbl">Total price</div></div>
+      <div style="width:1px;height:36px;background:var(--b)"></div>
+      <div class="foh-total-item"><div class="foh-total-val" id="foh-variant">—</div><div class="foh-total-lbl">Variant</div></div>
+      <div style="width:1px;height:36px;background:var(--b)"></div>
+      <div class="foh-total-item"><div class="foh-total-val" id="foh-timeline">—</div><div class="foh-total-lbl">Delivery</div></div>
+      <div style="width:1px;height:36px;background:var(--b)"></div>
+      <div class="foh-total-item"><div class="foh-total-val" id="foh-margin">~38–52%</div><div class="foh-total-lbl">Gross margin</div></div>
+      <div style="width:1px;height:36px;background:var(--b)"></div>
+      <div class="foh-total-item"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--g2)" id="foh-fitout-delta">Fit-out delta</div><div class="foh-total-lbl">vs standard</div></div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn-go" onclick="applyFOHToDesign()">Apply to Design</button>
+        <button class="btn-sec" onclick="fohToProposal()" style="padding:11px 16px">→ Run Pipeline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ VERSION HISTORY ════════════════════════════════════ -->
+<div id="versions-panel">
+  <div class="panel-header">
+    <div><div class="panel-title">Design Version History</div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--g1);letter-spacing:0.15em;margin-top:2px">Save and restore named snapshots · up to 20 versions stored locally</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-go" onclick="saveVersion()" style="padding:8px 16px;font-size:8px">+ Save Current</button>
+      <button class="panel-close" onclick="closeVersionsPanel()">✕ Close</button>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;overflow:hidden">
+    <div style="width:340px;flex-shrink:0;border-right:1px solid var(--b);overflow-y:auto;padding:14px;" id="versions-list"></div>
+    <div style="flex:1;padding:20px;overflow-y:auto">
+      <div id="version-compare" style="display:none;background:var(--s1);border:1px solid var(--b);border-radius:3px;padding:16px;margin-bottom:16px"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">How to use</div>
+      <div style="font-size:12px;color:var(--g2);line-height:1.8">
+        <strong style="color:var(--g3)">Save</strong> — captures model, config, tier, all placed equipment, and pipeline results.<br>
+        <strong style="color:var(--g3)">Load</strong> — click any version to restore. The current design is replaced.<br>
+        <strong style="color:var(--g3)">Tip</strong> — save a "Standard hospitality" and a "FOH Full Mission" version of the same hull to show both configurations to different buyers in the same meeting.
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
